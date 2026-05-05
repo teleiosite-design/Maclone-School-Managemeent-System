@@ -1,10 +1,41 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Award, BookOpen, Users, ShieldCheck, Sparkles, Trophy } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, Award, BookOpen, Users, ShieldCheck } from "lucide-react";
 import heroImg from "@/assets/hero-students.jpg";
 import primaryImg from "@/assets/primary.jpg";
 import secondaryImg from "@/assets/secondary.jpg";
 import gradImg from "@/assets/graduation.jpg";
 import CTABanner from "@/components/site/CTABanner";
+
+const slides = [
+  {
+    image: heroImg,
+    eyebrow: "NURSERY — SS3 · EST. 2003",
+    titleStart: "BUILT FOR BRILLIANT ",
+    titleAccent: "MINDS.",
+    subtitle: "Two decades. One promise — the highest standard of education in a calm, modern environment for your child.",
+    cta: { label: "EXPLORE PRIMARY", to: "/primary" },
+    secondaryCta: { label: "EXPLORE SECONDARY", to: "/secondary" },
+  },
+  {
+    image: primaryImg,
+    eyebrow: "PRIMARY · AGES 3–11",
+    titleStart: "WHERE CURIOSITY ",
+    titleAccent: "BEGINS.",
+    subtitle: "Small classes, expert teachers and a joyful start that sets the foundation for a lifetime of learning.",
+    cta: { label: "EXPLORE PRIMARY", to: "/primary" },
+    secondaryCta: { label: "BOOK A TOUR", to: "/contact" },
+  },
+  {
+    image: secondaryImg,
+    eyebrow: "SECONDARY · JSS1 — SS3",
+    titleStart: "WHERE AMBITION ",
+    titleAccent: "TAKES SHAPE.",
+    subtitle: "Rigorous prep for WAEC, NECO, JAMB and top universities at home and abroad.",
+    cta: { label: "EXPLORE SECONDARY", to: "/secondary" },
+    secondaryCta: { label: "APPLY NOW", to: "/admissions" },
+  },
+];
 
 const stats = [
   { value: "20", label: "YEARS" },
