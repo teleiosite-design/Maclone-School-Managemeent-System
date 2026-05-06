@@ -141,7 +141,7 @@ export function ParentDashboard() {
             <p className="eyebrow text-gold mb-2">Next Payment</p>
             <div className="font-display text-3xl font-black">₦750,000</div>
             <div className="text-white/70 text-sm mt-1">Term 3 Tuition · Due Sep 5</div>
-            <button className="w-full mt-4 bg-gold text-navy py-3 font-bold tracking-wider text-sm">PAY NOW →</button>
+            <button onClick={() => navigate("/dashboard/parent/fees")} className="w-full mt-4 bg-gold text-navy py-3 font-bold tracking-wider text-sm hover:bg-gold/90">PAY NOW →</button>
           </div>
 
           <div className="bg-white border border-border p-5">
