@@ -1,4 +1,6 @@
 import { Download } from "lucide-react";
+import { toast } from "sonner";
+import { downloadCSV } from "@/lib/csv";
 
 const classPerf = [
   { class: "JSS 1A", students: 24, avg: 78, pass: 22, fail: 2, top: "Bola Ade — 91%" },
