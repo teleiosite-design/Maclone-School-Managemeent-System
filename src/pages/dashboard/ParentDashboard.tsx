@@ -80,7 +80,7 @@ export function ParentDashboard() {
           <div className="bg-white border border-border p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-navy">Recent Results</h3>
-              <a className="text-xs text-navy font-semibold">View All</a>
+              <Link to="/dashboard/parent/results" className="text-xs text-navy font-semibold hover:text-gold">View All</Link>
             </div>
             <div className="space-y-3 text-sm">
               {[
