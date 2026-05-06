@@ -55,7 +55,7 @@ export default function StudentResources() {
               </div>
               <span className={`text-[10px] font-bold px-2 py-1 shrink-0 ${typeColors[r.type]}`}>{r.type}</span>
               {r.size !== "—" && <span className="text-xs text-muted-foreground hidden sm:block">{r.size}</span>}
-              <button className="bg-navy text-gold px-3 py-2 text-xs font-bold hover:bg-navy/90 transition flex items-center gap-1.5 shrink-0">
+              <button onClick={() => toast.success(`Downloading "${r.title}"...`)} className="bg-navy text-gold px-3 py-2 text-xs font-bold hover:bg-navy/90 transition flex items-center gap-1.5 shrink-0">
                 <Download size={12} /> GET
               </button>
             </div>
