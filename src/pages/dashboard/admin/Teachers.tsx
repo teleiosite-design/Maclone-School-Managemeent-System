@@ -135,13 +135,50 @@ export default function AdminTeachers() {
                   </span>
                 </td>
                 <td className="px-5 py-4 text-right">
-                  <button className="text-xs font-bold text-navy hover:text-gold transition">VIEW</button>
+                  <button onClick={() => setViewing(t)} className="text-xs font-bold text-navy hover:text-gold transition">VIEW</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {showAdd && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowAdd(false)}>
+          <form onSubmit={addTeacher} onClick={(e) => e.stopPropagation()} className="bg-white p-6 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-xl font-black text-navy">Add Teacher</h3>
+              <button type="button" onClick={() => setShowAdd(false)}><X size={18} /></button>
+            </div>
+            <input required placeholder="Full name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full border border-border px-3 py-2 text-sm" />
+            <input required placeholder="Subject" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} className="w-full border border-border px-3 py-2 text-sm" />
+            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="w-full border border-border px-3 py-2 text-sm bg-white">
+              <option>Primary</option><option>Secondary</option>
+            </select>
+            <input placeholder="Experience (e.g. 5 yrs)" value={form.experience} onChange={(e) => setForm({ ...form, experience: e.target.value })} className="w-full border border-border px-3 py-2 text-sm" />
+            <button type="submit" className="w-full bg-navy text-gold py-3 font-bold text-xs tracking-wider">SAVE TEACHER</button>
+          </form>
+        </div>
+      )}
+
+      {viewing && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setViewing(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-white p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-xl font-black text-navy">{viewing.name}</h3>
+              <button onClick={() => setViewing(null)}><X size={18} /></button>
+            </div>
+            <dl className="text-sm space-y-2 text-navy">
+              <div className="flex justify-between"><dt className="text-muted-foreground">ID</dt><dd className="font-mono">{viewing.id}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Subject</dt><dd>{viewing.subject}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Section</dt><dd>{viewing.type}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Experience</dt><dd>{viewing.experience}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Status</dt><dd>{viewing.status}</dd></div>
+              <div><dt className="text-muted-foreground mb-1">Classes</dt><dd className="flex flex-wrap gap-1">{viewing.classes.map((c) => <span key={c} className="text-[10px] bg-navy/10 text-navy px-2 py-0.5 font-bold">{c}</span>)}</dd></div>
+            </dl>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
