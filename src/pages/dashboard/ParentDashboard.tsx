@@ -71,7 +71,7 @@ export function ParentDashboard() {
                       <div className="font-bold text-navy">{c.average}%</div>
                     </div>
                   </div>
-                  <button className={`w-full mt-3 ${c.color} text-white py-2 text-xs font-bold tracking-wider`}>VIEW DETAILS</button>
+                  <button onClick={() => navigate("/dashboard/parent/children")} className={`w-full mt-3 ${c.color} text-white py-2 text-xs font-bold tracking-wider hover:opacity-90`}>VIEW DETAILS</button>
                 </div>
               ))}
             </div>
