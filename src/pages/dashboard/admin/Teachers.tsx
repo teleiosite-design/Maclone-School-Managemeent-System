@@ -14,15 +14,39 @@ const teachers = [
   { id: "T-008", name: "Mrs. Funke Okonkwo", subject: "Primary Class Teacher", classes: ["Primary 1A", "Primary 1B"], type: "Primary", experience: "9 yrs", status: "On Leave" },
 ];
 
+type Teacher = typeof teachers[0];
+
 export default function AdminTeachers() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
+  const [items, setItems] = useState(teachers);
+  const [viewing, setViewing] = useState<Teacher | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({ name: "", subject: "", type: "Secondary", experience: "1 yrs" });
 
-  const filtered = teachers.filter((t) => {
+  const filtered = items.filter((t) => {
     const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) || t.subject.toLowerCase().includes(search.toLowerCase());
     const matchType = typeFilter === "All" || t.type === typeFilter;
     return matchSearch && matchType;
   });
+
+  const exportCsv = () => {
+    downloadCSV("teachers.csv", [
+      ["ID", "Name", "Subject", "Classes", "Section", "Experience", "Status"],
+      ...filtered.map((t) => [t.id, t.name, t.subject, t.classes.join("; "), t.type, t.experience, t.status]),
+    ]);
+    toast.success(`Exported ${filtered.length} teachers.`);
+  };
+
+  const addTeacher = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    const id = `T-${String(items.length + 1).padStart(3, "0")}`;
+    setItems((p) => [{ id, ...form, classes: [], status: "Active" }, ...p]);
+    toast.success(`${form.name} added.`);
+    setForm({ name: "", subject: "", type: "Secondary", experience: "1 yrs" });
+    setShowAdd(false);
+  };
 
   return (
     <div className="space-y-6">
