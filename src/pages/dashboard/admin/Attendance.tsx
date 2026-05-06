@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   CalendarDays,
@@ -46,7 +46,7 @@ const anomalyRows = [
   },
 ];
 
-const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
+const tabs: { key: TabKey; label: string; icon: ReactNode }[] = [
   { key: "surveillance", label: "Surveillance Log", icon: <Shield size={14} /> },
   { key: "anomaly", label: "Anomaly Detection", icon: <AlertTriangle size={14} /> },
   { key: "policy", label: "Security Policy", icon: <ScanSearch size={14} /> },
@@ -59,9 +59,9 @@ function PolicyCard({
   children,
 }: {
   title: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   tone: "green" | "amber" | "blue" | "purple";
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const toneClass = {
     green: "bg-emerald-100 text-emerald-700",
@@ -71,7 +71,7 @@ function PolicyCard({
   }[tone];
 
   return (
-    <div className="rounded-2xl border border-border bg-white p-6 space-y-5">
+    <div className="bg-white border border-border p-6 space-y-5">
       <div className="flex items-center gap-3">
         <div className={`h-10 w-10 rounded-xl grid place-items-center ${toneClass}`}>{icon}</div>
         <h3 className="text-3xl font-display font-black text-navy leading-none">{title}</h3>
@@ -103,13 +103,13 @@ export default function AdminAttendance() {
         <p className="text-muted-foreground text-lg max-w-3xl">Advanced biometric monitoring and network-level security policing for organizational check-in integrity.</p>
       </div>
 
-      <div className="inline-flex items-center gap-1 rounded-xl bg-white p-1 border border-border shadow-sm">
+      <div className="inline-flex items-center gap-1 bg-white border border-border p-1">
         {tabs.map((item) => (
           <button
             key={item.key}
             onClick={() => setTab(item.key)}
-            className={`px-5 py-3 text-sm font-bold rounded-xl transition flex items-center gap-2 ${
-              tab === item.key ? "bg-orange-500 text-white shadow" : "text-muted-foreground hover:text-navy"
+            className={`px-5 py-3 text-sm font-bold transition flex items-center gap-2 ${
+              tab === item.key ? "bg-navy text-gold" : "text-muted-foreground hover:text-navy"
             }`}
           >
             {item.icon}
@@ -125,7 +125,7 @@ export default function AdminAttendance() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search employee by name or ID..."
-              className="flex-1 min-w-[260px] border border-border bg-white rounded-xl px-4 py-3"
+              className="flex-1 min-w-[260px] border border-border bg-white px-4 py-3"
             />
             <select
               value={selectedClass}
@@ -133,22 +133,22 @@ export default function AdminAttendance() {
                 setSelectedClass(e.target.value);
                 setStudents(generateStudents(e.target.value));
               }}
-              className="border border-border bg-white rounded-xl px-4 py-3"
+              className="border border-border bg-white px-4 py-3"
             >
               {classes.map((c) => (
                 <option key={c}>{c}</option>
               ))}
             </select>
-            <label className="border border-border bg-white rounded-xl px-4 py-3 flex items-center gap-2 text-sm">
+            <label className="border border-border bg-white px-4 py-3 flex items-center gap-2 text-sm">
               <CalendarDays size={16} />
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-transparent outline-none" />
             </label>
-            <button className="border border-border rounded-xl p-3 bg-white" onClick={() => setQuery("")}>
+            <button className="border border-border p-3 bg-white" onClick={() => setQuery("")}>
               <RefreshCcw size={16} />
             </button>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white overflow-hidden">
+          <div className="bg-white border border-border overflow-hidden">
             <div className="grid grid-cols-7 text-[11px] tracking-[0.2em] uppercase text-muted-foreground font-bold border-b border-border px-6 py-4">
               <div>Employee</div><div>Log Date</div><div>Clock In</div><div>Clock Out</div><div>Network IP</div><div>Outcome</div><div>Validation</div>
             </div>
@@ -174,7 +174,7 @@ export default function AdminAttendance() {
 
       {tab === "anomaly" && (
         <>
-          <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-6 flex items-start gap-4">
+          <div className="border border-rose-200 bg-rose-50/60 p-6 flex items-start gap-4">
             <div className="h-12 w-12 rounded-2xl bg-rose-500 text-white grid place-items-center shadow"><ShieldAlert size={22} /></div>
             <div>
               <h3 className="text-2xl font-display font-black text-rose-800">Security Alert Protocol</h3>
@@ -182,7 +182,7 @@ export default function AdminAttendance() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white overflow-hidden">
+          <div className="bg-white border border-border overflow-hidden">
             <div className="grid grid-cols-6 text-[11px] tracking-[0.2em] uppercase text-muted-foreground font-bold border-b border-border px-6 py-4">
               <div>Identified Employee</div><div>Event Date</div><div>Checkpoint</div><div>Source IP</div><div>Hardware Identity</div><div>Violation Logic</div>
             </div>
@@ -205,18 +205,18 @@ export default function AdminAttendance() {
           <div className="grid lg:grid-cols-2 gap-6">
             <PolicyCard title="Clock-In Matrix" icon={<Clock3 size={18} />} tone="green">
               <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                <div className="space-y-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Earliest Sign-In</div><div className="bg-secondary border border-border rounded-xl p-3 font-bold text-navy">07:00 AM</div></div>
-                <div className="space-y-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Punctuality Limit</div><div className="bg-secondary border border-border rounded-xl p-3 font-bold text-navy">09:00 AM</div></div>
-                <div className="space-y-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Grace Threshold (Min)</div><div className="bg-secondary border border-border rounded-xl p-3 font-bold text-navy">15</div></div>
-                <div className="space-y-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Absence Trigger</div><div className="bg-secondary border border-border rounded-xl p-3 font-bold text-navy">11:00 AM</div></div>
+                <div className="space-y-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Earliest Sign-In</div><div className="bg-secondary border border-border p-3 font-bold text-navy">07:00 AM</div></div>
+                <div className="space-y-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Punctuality Limit</div><div className="bg-secondary border border-border p-3 font-bold text-navy">09:00 AM</div></div>
+                <div className="space-y-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Grace Threshold (Min)</div><div className="bg-secondary border border-border p-3 font-bold text-navy">15</div></div>
+                <div className="space-y-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Absence Trigger</div><div className="bg-secondary border border-border p-3 font-bold text-navy">11:00 AM</div></div>
               </div>
             </PolicyCard>
 
             <PolicyCard title="Clock-Out Matrix" icon={<Clock3 size={18} />} tone="amber">
               <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                <div className="space-y-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Half-Day Boundary</div><div className="bg-secondary border border-border rounded-xl p-3 font-bold text-navy">01:00 PM</div></div>
-                <div className="space-y-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Window Authorization</div><div className="bg-secondary border border-border rounded-xl p-3 font-bold text-navy">04:00 PM</div></div>
-                <div className="space-y-2 sm:col-span-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Standard Shift End</div><div className="bg-secondary border border-border rounded-xl p-3 font-bold text-navy">06:00 PM</div></div>
+                <div className="space-y-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Half-Day Boundary</div><div className="bg-secondary border border-border p-3 font-bold text-navy">01:00 PM</div></div>
+                <div className="space-y-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Window Authorization</div><div className="bg-secondary border border-border p-3 font-bold text-navy">04:00 PM</div></div>
+                <div className="space-y-2 sm:col-span-2"><div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Standard Shift End</div><div className="bg-secondary border border-border p-3 font-bold text-navy">06:00 PM</div></div>
               </div>
             </PolicyCard>
           </div>
@@ -226,8 +226,8 @@ export default function AdminAttendance() {
               <div className="space-y-4">
                 <div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Authorized IP Pool</div>
                 <div className="flex gap-3">
-                  <input placeholder="e.g. 192.168.1.1, 10.0.0.1" className="flex-1 border border-border rounded-xl px-3 py-3 bg-secondary" />
-                  <button className="border border-orange-300 text-orange-600 px-4 rounded-xl font-semibold">Capture My IP</button>
+                  <input placeholder="e.g. 192.168.1.1, 10.0.0.1" className="flex-1 border border-border px-3 py-3 bg-secondary" />
+                  <button className="border border-orange-300 text-orange-600 px-4 font-semibold">Capture My IP</button>
                 </div>
               </div>
             </PolicyCard>
@@ -235,10 +235,10 @@ export default function AdminAttendance() {
             <PolicyCard title="Geofence Registry" icon={<MapPin size={18} />} tone="purple">
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <input placeholder="Latitude reference" className="border border-border rounded-xl px-3 py-3 bg-secondary" />
-                  <input placeholder="Longitude reference" className="border border-border rounded-xl px-3 py-3 bg-secondary" />
+                  <input placeholder="Latitude reference" className="border border-border px-3 py-3 bg-secondary" />
+                  <input placeholder="Longitude reference" className="border border-border px-3 py-3 bg-secondary" />
                 </div>
-                <button className="w-full border border-purple-300 text-purple-600 rounded-xl py-3 font-semibold">Sync GPS Coordinates</button>
+                <button className="w-full border border-purple-300 text-purple-600 py-3 font-semibold">Sync GPS Coordinates</button>
               </div>
             </PolicyCard>
           </div>
@@ -246,7 +246,7 @@ export default function AdminAttendance() {
           <div className="flex justify-end">
             <button
               onClick={() => toast.success(`Saved: ${presentCount} present, ${students.length - presentCount} absent in ${selectedClass}.`)}
-              className="bg-orange-500 text-white font-bold px-8 py-3 rounded-xl hover:bg-orange-600 transition"
+              className="bg-navy text-gold font-bold px-8 py-3 hover:bg-navy/90 transition"
             >
               Lock Configuration
             </button>
