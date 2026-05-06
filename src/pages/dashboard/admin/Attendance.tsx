@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   CalendarDays,
@@ -46,7 +46,7 @@ const anomalyRows = [
   },
 ];
 
-const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
+const tabs: { key: TabKey; label: string; icon: ReactNode }[] = [
   { key: "surveillance", label: "Surveillance Log", icon: <Shield size={14} /> },
   { key: "anomaly", label: "Anomaly Detection", icon: <AlertTriangle size={14} /> },
   { key: "policy", label: "Security Policy", icon: <ScanSearch size={14} /> },
@@ -59,9 +59,9 @@ function PolicyCard({
   children,
 }: {
   title: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   tone: "green" | "amber" | "blue" | "purple";
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const toneClass = {
     green: "bg-emerald-100 text-emerald-700",
