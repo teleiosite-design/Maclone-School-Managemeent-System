@@ -19,14 +19,36 @@ const students = [
 export default function AdminStudents() {
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("All");
+  const [items, setItems] = useState(students);
+  const [showAdd, setShowAdd] = useState(false);
+  const [viewing, setViewing] = useState<typeof students[0] | null>(null);
+  const [form, setForm] = useState({ name: "", class: "Primary 3", gender: "Male", parent: "" });
 
   const classes = ["All", "Primary 3", "Primary 5", "Primary 6", "JSS 1", "JSS 2", "JSS 3", "SS 1", "SS 2", "SS 3"];
 
-  const filtered = students.filter((s) => {
+  const filtered = items.filter((s) => {
     const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) || s.id.includes(search);
     const matchClass = classFilter === "All" || s.class === classFilter;
     return matchSearch && matchClass;
   });
+
+  const exportCsv = () => {
+    downloadCSV("students.csv", [
+      ["ID", "Name", "Class", "Gender", "Parent", "Attendance", "Avg Score", "Status"],
+      ...filtered.map((s) => [s.id, s.name, s.class, s.gender, s.parent, `${s.attendance}%`, `${s.avg}%`, s.status]),
+    ]);
+    toast.success(`Exported ${filtered.length} students.`);
+  };
+
+  const addStudent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    const id = `MC-${String(items.length + 1).padStart(3, "0")}`;
+    setItems((p) => [{ id, ...form, attendance: 100, avg: 0, status: "Active" }, ...p]);
+    toast.success(`${form.name} added.`);
+    setForm({ name: "", class: "Primary 3", gender: "Male", parent: "" });
+    setShowAdd(false);
+  };
 
   return (
     <div className="space-y-6">
