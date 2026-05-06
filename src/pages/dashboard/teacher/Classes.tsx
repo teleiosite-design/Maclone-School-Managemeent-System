@@ -70,7 +70,7 @@ export default function TeacherClasses() {
                 <div className="text-xs text-muted-foreground">
                   <span className="font-bold text-navy">Next: </span>{c.nextClass}
                 </div>
-                <button className={`${c.color} text-white text-xs font-bold px-4 py-2 hover:opacity-90 transition`}>
+                <button onClick={() => navigate("/dashboard/teacher/students")} className={`${c.color} text-white text-xs font-bold px-4 py-2 hover:opacity-90 transition`}>
                   VIEW CLASS
                 </button>
               </div>
