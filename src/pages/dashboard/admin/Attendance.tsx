@@ -80,7 +80,7 @@ export default function AdminAttendance() {
             </button>
           ))}
         </div>
-        <button className="mt-5 bg-navy text-gold px-6 py-3 text-xs font-bold tracking-wider hover:bg-navy/90 transition">SAVE ATTENDANCE →</button>
+        <button onClick={() => toast.success(`Saved: ${presentCount} present, ${students.length - presentCount} absent in ${selectedClass}.`)} className="mt-5 bg-navy text-gold px-6 py-3 text-xs font-bold tracking-wider hover:bg-navy/90 transition">SAVE ATTENDANCE →</button>
       </div>
     </div>
   );
