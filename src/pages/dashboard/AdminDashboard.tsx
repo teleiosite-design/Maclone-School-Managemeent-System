@@ -23,6 +23,7 @@ export default function AdminLayout() {
 }
 
 export function AdminDashboard() {
+  const navigate = useNavigate();
   const months = ["May 1", "May 8", "May 15", "May 22", "May 29"];
   const attendance = [62, 70, 74, 80, 92];
   const fees = [55, 70, 110, 90, 130, 95, 120, 80, 75, 160, 130, 140];
