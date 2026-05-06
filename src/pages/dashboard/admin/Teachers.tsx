@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Search, Plus, Download } from "lucide-react";
+import { Search, Plus, Download, X } from "lucide-react";
+import { toast } from "sonner";
+import { downloadCSV } from "@/lib/csv";
 
 const teachers = [
   { id: "T-001", name: "Mr. Daniel Marko", subject: "Mathematics", classes: ["JSS 1A", "JSS 2B", "SS 1A"], type: "Secondary", experience: "8 yrs", status: "Active" },
