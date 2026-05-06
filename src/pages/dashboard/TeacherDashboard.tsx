@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import StatCard from "@/components/dashboard/StatCard";
 import {
-  LayoutDashboard, BookOpen, Users, ClipboardList, FileText,
+  LayoutDashboard, BookOpen, Users, FileText,
   Award, Calendar, MessageSquare, BarChart3, Settings,
   CheckCircle2, ClipboardCheck, FileEdit, Megaphone, Clock, TimerReset,
 } from "lucide-react";
@@ -14,7 +14,6 @@ const nav = [
   { to: "/dashboard/teacher/classes", label: "My Classes", icon: <BookOpen size={18} /> },
   { to: "/dashboard/teacher/students", label: "Students", icon: <Users size={18} /> },
   { to: "/dashboard/teacher/attendance", label: "Attendance", icon: <ClipboardCheck size={18} /> },
-  { to: "/dashboard/teacher/clockin-clockout", label: "Clockin-Clockout", icon: <Clock size={18} /> },
   { to: "/dashboard/teacher/assignments", label: "Assignments", icon: <FileText size={18} /> },
   { to: "/dashboard/teacher/exams", label: "Exams & Grading", icon: <Award size={18} /> },
   { to: "/dashboard/teacher/timetable", label: "Timetable", icon: <Calendar size={18} /> },

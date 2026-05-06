@@ -1,69 +1,3 @@
-<<<<<<< HEAD
-import { useMemo, useState } from "react";
-import { CalendarDays, CheckCircle2, Clock3, TriangleAlert } from "lucide-react";
-
-const mockHistory: { date: string; in: string; out: string; status: string }[] = [];
-
-export default function TeacherClockInClockOut() {
-  const [now] = useState(new Date());
-  const [checkIn, setCheckIn] = useState<string | null>(null);
-  const [checkOut, setCheckOut] = useState<string | null>(null);
-
-  const timeText = useMemo(
-    () => now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-    [now]
-  );
-  const dateText = useMemo(
-    () => now.toLocaleDateString([], { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
-    [now]
-  );
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-black text-navy">Clockin-Clockout</h1>
-        <p className="text-muted-foreground text-sm">Track your daily check-ins and working hours.</p>
-      </div>
-
-      <div className="bg-white border border-border p-6 grid lg:grid-cols-[1.4fr_1fr_auto] gap-6 items-center">
-        <div>
-          <div className="font-display text-5xl font-black text-navy">{timeText}</div>
-          <div className="text-muted-foreground mt-1">{dateText}</div>
-          <div className="text-accent font-semibold mt-2">Check-in opens at 07:00</div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 text-center">
-          <div className="border-r border-border pr-4">
-            <div className="text-[11px] tracking-wider text-muted-foreground font-bold">CHECK IN</div>
-            <div className="text-xl font-black text-navy mt-2">{checkIn ?? "—"}</div>
-          </div>
-          <div>
-            <div className="text-[11px] tracking-wider text-muted-foreground font-bold">CHECK OUT</div>
-            <div className="text-xl font-black text-navy mt-2">{checkOut ?? "—"}</div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <button onClick={() => setCheckIn(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))} className="w-full bg-navy text-gold px-5 py-3 text-xs font-bold tracking-wider hover:bg-navy/90">SIGN IN</button>
-          <button onClick={() => setCheckOut(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))} className="w-full border border-navy text-navy px-5 py-3 text-xs font-bold tracking-wider hover:bg-navy hover:text-gold">SIGN OUT</button>
-        </div>
-      </div>
-
-      <div className="bg-gold/10 border border-gold/30 p-4 text-sm text-navy flex flex-wrap gap-x-6 gap-y-2">
-        <span className="flex items-center gap-2"><Clock3 size={15} className="text-accent" /> Sign-in window: <strong>07:00 - 09:00</strong></span>
-        <span className="flex items-center gap-2"><TriangleAlert size={15} className="text-amber-600" /> Late after: <strong>09:15</strong> (+15 min grace)</span>
-        <span className="flex items-center gap-2"><CheckCircle2 size={15} className="text-emerald-600" /> Sign-out opens: <strong>04:00 PM</strong></span>
-      </div>
-
-      <div className="bg-white border border-border overflow-hidden">
-        <div className="px-6 py-4 border-b border-border flex items-center gap-2 text-navy font-bold"><CalendarDays size={16} className="text-accent" />Recent Attendance History</div>
-        <div className="grid grid-cols-4 text-[11px] tracking-wider uppercase text-muted-foreground font-bold px-6 py-3 border-b border-border">
-          <div>Date</div><div>Check In</div><div>Check Out</div><div>Status</div>
-        </div>
-        {mockHistory.length === 0 ? (
-          <div className="h-24 grid place-items-center text-muted-foreground">No attendance records yet.</div>
-        ) : null}
-=======
 import { useState, useEffect } from "react";
 import { Clock, AlertTriangle, CheckCircle2, LogIn, LogOut, CalendarDays, TimerReset } from "lucide-react";
 import { toast } from "sonner";
@@ -82,16 +16,16 @@ const seedRecords: AttendanceRecord[] = [
   { date: "Mon, 5 May 2025", checkIn: "07:52 AM", checkOut: "04:10 PM", status: "On Time" },
   { date: "Tue, 6 May 2025", checkIn: "09:17 AM", checkOut: "04:00 PM", status: "Late" },
   { date: "Wed, 7 May 2025", checkIn: "07:40 AM", checkOut: "01:05 PM", status: "Half Day" },
-  { date: "Thu, 8 May 2025", checkIn: null, checkOut: null, status: "Absent" },
+  { date: "Thu, 8 May 2025", checkIn: null,       checkOut: null,        status: "Absent" },
   { date: "Fri, 9 May 2025", checkIn: "08:01 AM", checkOut: "04:30 PM", status: "On Time" },
 ];
 
 function getStatusStyle(status: AttendanceRecord["status"]) {
   switch (status) {
-    case "On Time":   return "bg-emerald-100 text-emerald-700";
-    case "Late":      return "bg-amber-100 text-amber-700";
-    case "Half Day":  return "bg-violet-100 text-violet-700";
-    case "Absent":    return "bg-rose-100 text-rose-700";
+    case "On Time":  return "bg-emerald-100 text-emerald-700";
+    case "Late":     return "bg-amber-100 text-amber-700";
+    case "Half Day": return "bg-violet-100 text-violet-700";
+    case "Absent":   return "bg-rose-100 text-rose-700";
   }
 }
 
@@ -126,9 +60,9 @@ export default function ClockinClockout() {
     const time = currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
     const hour = currentTime.getHours();
     const status: AttendanceRecord["status"] =
-      !checkInTime               ? "Absent" :
-      hour < 13                  ? "Half Day" :
-      new Date(checkInTime).getHours?.() > 9 ? "Late" : "On Time";
+      !checkInTime ? "Absent" :
+      hour < 13    ? "Half Day" :
+      hour > 9     ? "Late" : "On Time";
 
     setCheckOutTime(time);
     toggleClockIn(TEACHER_ID);
@@ -157,7 +91,6 @@ export default function ClockinClockout() {
 
       {/* Clock-in card */}
       <div className="bg-white border border-border rounded-lg overflow-hidden">
-        {/* Status bar */}
         <div className={`px-6 py-3 flex items-center gap-2 text-sm font-bold ${isClockedIn ? "bg-emerald-600 text-white" : "bg-navy text-gold"}`}>
           <TimerReset size={16} />
           {isClockedIn ? "Currently Clocked In — Session Active" : "Not Clocked In"}
@@ -187,9 +120,7 @@ export default function ClockinClockout() {
               </div>
               <div className="bg-secondary border border-border rounded-md p-4 text-center">
                 <div className="text-[11px] uppercase tracking-widest text-muted-foreground font-bold mb-1">Check Out</div>
-                <div className="text-xl font-black text-navy font-mono">
-                  {checkOutTime ?? "—"}
-                </div>
+                <div className="text-xl font-black text-navy font-mono">{checkOutTime ?? "—"}</div>
               </div>
             </div>
 
@@ -203,8 +134,7 @@ export default function ClockinClockout() {
                     : "bg-navy text-gold hover:bg-navy/90 shadow-sm"
                 }`}
               >
-                <LogIn size={16} />
-                Sign In
+                <LogIn size={16} /> Sign In
               </button>
               <button
                 onClick={handleSignOut}
@@ -215,38 +145,31 @@ export default function ClockinClockout() {
                     : "bg-rose-600 text-white hover:bg-rose-700 shadow-sm"
                 }`}
               >
-                <LogOut size={16} />
-                Sign Out
+                <LogOut size={16} /> Sign Out
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Info banner */}
+      {/* Info banners */}
       <div className="grid sm:grid-cols-3 gap-4">
         <div className="bg-white border border-border rounded-lg p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-md bg-navy text-gold grid place-items-center shrink-0">
-            <Clock size={18} />
-          </div>
+          <div className="h-10 w-10 rounded-md bg-navy text-gold grid place-items-center shrink-0"><Clock size={18} /></div>
           <div>
             <div className="text-[11px] uppercase tracking-widest text-muted-foreground font-bold">Sign-In Window</div>
             <div className="font-bold text-navy text-sm">07:00 AM – 11:00 AM</div>
           </div>
         </div>
         <div className="bg-white border border-amber-200 rounded-lg p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-md bg-amber-500 text-white grid place-items-center shrink-0">
-            <AlertTriangle size={18} />
-          </div>
+          <div className="h-10 w-10 rounded-md bg-amber-500 text-white grid place-items-center shrink-0"><AlertTriangle size={18} /></div>
           <div>
             <div className="text-[11px] uppercase tracking-widest text-amber-600 font-bold">Late Grace Period</div>
             <div className="font-bold text-navy text-sm">After 09:00 AM (15 min)</div>
           </div>
         </div>
         <div className="bg-white border border-border rounded-lg p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-md bg-emerald-600 text-white grid place-items-center shrink-0">
-            <CheckCircle2 size={18} />
-          </div>
+          <div className="h-10 w-10 rounded-md bg-emerald-600 text-white grid place-items-center shrink-0"><CheckCircle2 size={18} /></div>
           <div>
             <div className="text-[11px] uppercase tracking-widest text-muted-foreground font-bold">Sign-Out Window</div>
             <div className="font-bold text-navy text-sm">04:00 PM – 06:00 PM</div>
@@ -254,7 +177,7 @@ export default function ClockinClockout() {
         </div>
       </div>
 
-      {/* Attendance history table */}
+      {/* Attendance history */}
       <div className="bg-white border border-border rounded-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <h3 className="font-bold text-navy">Recent Attendance</h3>
@@ -294,7 +217,6 @@ export default function ClockinClockout() {
             </table>
           </div>
         )}
->>>>>>> 76282c8 (feat: fix Admin Attendance UI consistency and add Teacher My Attendance (Clock-in/Clock-out) page)
       </div>
     </div>
   );
