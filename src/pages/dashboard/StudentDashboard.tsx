@@ -33,6 +33,7 @@ const courses = [
 ];
 
 export function StudentDashboard() {
+  const navigate = useNavigate();
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
   const scores = [40, 55, 65, 60, 70, 85];
 
