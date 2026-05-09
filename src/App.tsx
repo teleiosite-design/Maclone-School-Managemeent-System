@@ -101,9 +101,9 @@ const App = () => (
             <Route path="announcements" element={<AdminAnnouncements />} />
           </Route>
 
-          {/* Teacher portal */}
           <Route path="/dashboard/teacher" element={<TeacherLayout />}>
             <Route index element={<TeacherDashboard />} />
+            <Route path="clockin-clockout" element={<TeacherClockinClockout />} />
             <Route path="classes" element={<TeacherClasses />} />
             <Route path="students" element={<TeacherStudents />} />
             <Route path="attendance" element={<TeacherAttendance />} />
