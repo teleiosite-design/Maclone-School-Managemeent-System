@@ -22,9 +22,19 @@ export default function Login() {
       return;
     }
 
-    // Navigation handled by ProtectedRoute/AuthContext — profile.role drives the redirect
-    // We navigate to a neutral entry point; ProtectedRoute will redirect to the right portal
-    navigate('/dashboard/admin', { replace: true });
+    // Fetch profile to get role, then route to correct portal
+    const { data: profileData } = await (await import('@/lib/supabase')).supabase
+      .from('profiles')
+      .select('role')
+      .single();
+    const role = profileData?.role ?? 'student';
+    const roleRoutes: Record<string, string> = {
+      admin: '/dashboard/admin',
+      teacher: '/dashboard/teacher',
+      student: '/dashboard/student',
+      parent: '/dashboard/parent',
+    };
+    navigate(roleRoutes[role] ?? '/dashboard/student', { replace: true });
   };
 
   if (authLoading) {
