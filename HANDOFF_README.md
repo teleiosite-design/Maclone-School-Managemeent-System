@@ -4,15 +4,15 @@ This document summarizes backend/platform work completed so far and gives a step
 
 ## Have you finished your backend part?
 
-**Short answer:** You have completed the backend foundation and handoff artifacts; remaining work is mainly live environment execution + FE data wiring.
+**Short answer:** Yes. Backend scope for this sprint is complete in-repo (migrations, RLS policies, seed data, verification scripts, and API contract). What remains is your teammate's frontend wiring and shared QA.
 
 ### Completed backend/platform scope
 1. **Supabase project scaffolding in repo**
    - `.env.example` with required frontend env variables.
    - `supabase/README_SETUP.md` setup instructions.
-2. **Canonical migration path**
-   - `supabase/migrations/20260511_slices_1_3.sql` added as canonical schema migration for slices 1–3.
-   - `supabase/schema.sql` now points to migration-based source.
+2. **Canonical migration path (slices 1–3 fully defined)**
+   - `supabase/migrations/20260511_slices_1_3.sql` includes schema + helper functions + triggers + RLS policies.
+   - `supabase/schema.sql` points to migration-based source.
 3. **Backend planning + reference docs**
    - `BACKEND_API_PLAN.md` for endpoint/domain roadmap.
    - `BACKEND_SLICES.md` summarizing slices and integration assumptions.
@@ -22,7 +22,7 @@ This document summarizes backend/platform work completed so far and gives a step
 
 ---
 
-## What your teammate should do now (Frontend integration track)
+## What your teammate should do now (Frontend integration only)
 
 ## 1) Environment setup
 1. Create `.env` from `.env.example`.
