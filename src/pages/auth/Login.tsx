@@ -1,22 +1,41 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { FormEvent, useState } from "react";
 import { Lock, Mail, ShieldCheck } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { dashboardPathForRole, type UserRole } from "@/lib/supabaseAuth";
 
-const roles = [
-  { value: "admin", label: "Admin", path: "/dashboard/admin" },
-  { value: "teacher", label: "Teacher", path: "/dashboard/teacher" },
-  { value: "student", label: "Student", path: "/dashboard/student" },
-  { value: "parent", label: "Parent", path: "/dashboard/parent" },
+const roles: { value: UserRole; label: string }[] = [
+  { value: "admin", label: "Admin" },
+  { value: "teacher", label: "Teacher" },
+  { value: "student", label: "Student" },
+  { value: "parent", label: "Parent" },
 ];
 
 export default function Login() {
   const navigate = useNavigate();
-  const [role, setRole] = useState("admin");
+  const location = useLocation();
+  const { signIn } = useAuth();
+  const [role, setRole] = useState<UserRole>("admin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const target = roles.find((r) => r.value === role)?.path ?? "/";
-    navigate(target);
+    setError("");
+    setLoading(true);
+
+    try {
+      const session = await signIn(email.trim(), password);
+      const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+      const safeFrom = from?.startsWith(dashboardPathForRole(session.role)) ? from : undefined;
+      navigate(safeFrom ?? dashboardPathForRole(session.role), { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to sign in. Please check your credentials.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -51,7 +70,7 @@ export default function Login() {
 
           <p className="eyebrow mb-3">Sign in</p>
           <h2 className="font-display text-4xl font-black text-navy mb-2">Access your dashboard</h2>
-          <p className="text-muted-foreground mb-8">Enter your credentials to continue.</p>
+          <p className="text-muted-foreground mb-8">Enter your Supabase account credentials to continue.</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -70,6 +89,9 @@ export default function Login() {
                   </button>
                 ))}
               </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Dashboard access is controlled by the role saved in Supabase user metadata, not by this selector.
+              </p>
             </div>
 
             <div>
@@ -79,7 +101,10 @@ export default function Login() {
                 <input
                   type="email"
                   required
-                  defaultValue="user@meclones.edu.ng"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  placeholder="user@meclones.edu.ng"
                   className="w-full pl-10 pr-4 py-3 bg-white border border-border focus:border-navy focus:outline-none text-navy"
                 />
               </div>
@@ -97,11 +122,19 @@ export default function Login() {
                 <input
                   type="password"
                   required
-                  defaultValue="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
                   className="w-full pl-10 pr-4 py-3 bg-white border border-border focus:border-navy focus:outline-none text-navy"
                 />
               </div>
             </div>
+
+            {error && (
+              <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+                {error}
+              </div>
+            )}
 
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
               <input type="checkbox" className="accent-navy" />
@@ -110,9 +143,10 @@ export default function Login() {
 
             <button
               type="submit"
-              className="w-full bg-navy text-gold py-4 font-bold tracking-wider text-sm hover:bg-navy/90 transition"
+              disabled={loading}
+              className="w-full bg-navy text-gold py-4 font-bold tracking-wider text-sm hover:bg-navy/90 transition disabled:cursor-not-allowed disabled:opacity-70"
             >
-              SIGN IN TO PORTAL →
+              {loading ? "SIGNING IN..." : "SIGN IN TO PORTAL →"}
             </button>
 
             <p className="text-center text-sm text-muted-foreground">
