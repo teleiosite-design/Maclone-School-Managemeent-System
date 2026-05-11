@@ -74,14 +74,17 @@ meclones-premier/
 │   │   └── index.ts           # Zustand global state (timetables, teacher attendance)
 │   │
 │   ├── lib/
-│   │   └── utils.ts           # cn() helper (clsx + tailwind-merge)
+│   │   ├── utils.ts           # cn() helper (clsx + tailwind-merge)
+│   │   └── supabaseAuth.ts    # Supabase Auth REST helper
 │   │
-│   ├── hooks/                 # Custom React hooks (currently minimal)
+│   ├── hooks/
+│   │   └── useAuth.tsx        # Auth context/session hook
 │   │
 │   ├── assets/                # Bundled static assets (images, SVGs)
 │   │
 │   ├── components/
 │   │   ├── NavLink.tsx        # Active-aware router link wrapper
+│   │   ├── ProtectedRoute.tsx # Dashboard route guard
 │   │   ├── ui/                # shadcn/ui primitives (button, card, dialog, etc.)
 │   │   ├── site/              # Public website components
 │   │   │   ├── SiteLayout.tsx
@@ -211,11 +214,12 @@ The project uses a **custom HSL token system** defined in `src/index.css` and ex
 - [x] Hero sections, CTA banners, and mobile sticky CTA
 - [x] SEO meta tags, OG tags, Twitter card tags (Meclones-branded)
 
-### ✅ Authentication Shell
+### ✅ Authentication & Access Control
 - [x] Login page with role selector (Admin / Teacher / Student / Parent)
-- [x] Forgot Password page
-- [x] Route-based portal separation (each role has its own `/dashboard/:role` tree)
-> ⚠️ Authentication is **UI only** — no real backend auth, no session tokens, no protected routes yet.
+- [x] Forgot Password page wired to Supabase password recovery
+- [x] Supabase Auth email/password sign-in foundation
+- [x] Local session storage and refresh handling
+- [x] Protected dashboard routes for each role (`/dashboard/:role`)
 
 ### ✅ Admin Portal
 - [x] Dashboard overview with KPI stat cards
