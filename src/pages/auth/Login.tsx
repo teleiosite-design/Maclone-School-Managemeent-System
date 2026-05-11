@@ -1,23 +1,39 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { Lock, Mail, ShieldCheck } from "lucide-react";
-
-const roles = [
-  { value: "admin", label: "Admin", path: "/dashboard/admin" },
-  { value: "teacher", label: "Teacher", path: "/dashboard/teacher" },
-  { value: "student", label: "Student", path: "/dashboard/student" },
-  { value: "parent", label: "Parent", path: "/dashboard/parent" },
-];
+import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Lock, Mail, ShieldCheck, Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [role, setRole] = useState("admin");
+  const { signIn, loading: authLoading } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const target = roles.find((r) => r.value === role)?.path ?? "/";
-    navigate(target);
+    setLoading(true);
+    const { error } = await signIn(email, password);
+    setLoading(false);
+
+    if (error) {
+      toast.error('Sign-in failed', { description: error });
+      return;
+    }
+
+    // Navigation handled by ProtectedRoute/AuthContext — profile.role drives the redirect
+    // We navigate to a neutral entry point; ProtectedRoute will redirect to the right portal
+    navigate('/dashboard/admin', { replace: true });
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-cream">
+        <Loader2 className="animate-spin text-navy" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-cream">
@@ -55,31 +71,16 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold tracking-wider text-navy mb-2">SIGN IN AS</label>
-              <div className="grid grid-cols-4 gap-1 bg-secondary p-1">
-                {roles.map((r) => (
-                  <button
-                    key={r.value}
-                    type="button"
-                    onClick={() => setRole(r.value)}
-                    className={`py-2 text-xs font-bold tracking-wider transition ${
-                      role === r.value ? "bg-navy text-gold" : "text-navy/70 hover:text-navy"
-                    }`}
-                  >
-                    {r.label.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
               <label className="block text-xs font-bold tracking-wider text-navy mb-2">EMAIL</label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
+                  id="login-email"
                   type="email"
                   required
-                  defaultValue="user@meclones.edu.ng"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@meclones.edu.ng"
                   className="w-full pl-10 pr-4 py-3 bg-white border border-border focus:border-navy focus:outline-none text-navy"
                 />
               </div>
@@ -95,28 +96,35 @@ export default function Login() {
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
+                  id="login-password"
                   type="password"
                   required
-                  defaultValue="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
                   className="w-full pl-10 pr-4 py-3 bg-white border border-border focus:border-navy focus:outline-none text-navy"
                 />
               </div>
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <input type="checkbox" className="accent-navy" />
-              Keep me signed in for 30 days
-            </label>
-
             <button
+              id="login-submit"
               type="submit"
-              className="w-full bg-navy text-gold py-4 font-bold tracking-wider text-sm hover:bg-navy/90 transition"
+              disabled={loading}
+              className="w-full bg-navy text-gold py-4 font-bold tracking-wider text-sm hover:bg-navy/90 transition flex items-center justify-center gap-2 disabled:opacity-70"
             >
-              SIGN IN TO PORTAL →
+              {loading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  SIGNING IN…
+                </>
+              ) : (
+                'SIGN IN TO PORTAL →'
+              )}
             </button>
 
             <p className="text-center text-sm text-muted-foreground">
-              New parent?{" "}
+              New parent?{' '}
               <Link to="/admissions" className="text-navy font-semibold hover:underline">
                 Apply for admission
               </Link>

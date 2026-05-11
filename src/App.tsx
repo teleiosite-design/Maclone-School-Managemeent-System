@@ -3,6 +3,8 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/hooks/useAuth";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import SiteLayout from "./components/site/SiteLayout";
 import Home from "./pages/Home";
 import Primary from "./pages/Primary";
@@ -63,90 +65,107 @@ import ParentCalendar from "./pages/dashboard/parent/Calendar";
 import ParentReports from "./pages/dashboard/parent/Reports";
 import ParentSettings from "./pages/dashboard/parent/Settings";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60, // 1 minute
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Public site */}
-          <Route element={<SiteLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/primary" element={<Primary />} />
-            <Route path="/secondary" element={<Secondary />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/admissions" element={<Admissions />} />
-            <Route path="/fees" element={<Fees />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/contact" element={<Contact />} />
-          </Route>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Public site */}
+            <Route element={<SiteLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/primary" element={<Primary />} />
+              <Route path="/secondary" element={<Secondary />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/admissions" element={<Admissions />} />
+              <Route path="/fees" element={<Fees />} />
+              <Route path="/news" element={<News />} />
+              <Route path="/contact" element={<Contact />} />
+            </Route>
 
-          {/* Auth */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+            {/* Auth */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Admin portal */}
-          <Route path="/dashboard/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="students" element={<AdminStudents />} />
-            <Route path="teachers" element={<AdminTeachers />} />
-            <Route path="admissions" element={<AdminAdmissions />} />
-            <Route path="fees" element={<AdminFees />} />
-            <Route path="attendance" element={<AdminAttendance />} />
-            <Route path="academics" element={<AdminAcademics />} />
-            <Route path="timetable" element={<AdminTimetable />} />
-            <Route path="announcements" element={<AdminAnnouncements />} />
-          </Route>
+            {/* Admin portal — protected */}
+            <Route element={<ProtectedRoute allowedRole="admin" />}>
+              <Route path="/dashboard/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="students" element={<AdminStudents />} />
+                <Route path="teachers" element={<AdminTeachers />} />
+                <Route path="admissions" element={<AdminAdmissions />} />
+                <Route path="fees" element={<AdminFees />} />
+                <Route path="attendance" element={<AdminAttendance />} />
+                <Route path="academics" element={<AdminAcademics />} />
+                <Route path="timetable" element={<AdminTimetable />} />
+                <Route path="announcements" element={<AdminAnnouncements />} />
+              </Route>
+            </Route>
 
-          <Route path="/dashboard/teacher" element={<TeacherLayout />}>
-            <Route index element={<TeacherDashboard />} />
-            <Route path="clockin-clockout" element={<TeacherClockInClockOut />} />
-            <Route path="classes" element={<TeacherClasses />} />
-            <Route path="students" element={<TeacherStudents />} />
-            <Route path="attendance" element={<TeacherAttendance />} />
-            <Route path="assignments" element={<TeacherAssignments />} />
-            <Route path="exams" element={<TeacherExams />} />
-            <Route path="messages" element={<TeacherMessages />} />
-            <Route path="timetable" element={<TeacherTimetable />} />
-            <Route path="reports" element={<TeacherReports />} />
-            <Route path="settings" element={<TeacherSettings />} />
-            <Route path="clockin-clockout" element={<TeacherClockInClockOut />} />
-          </Route>
+            {/* Teacher portal — protected */}
+            <Route element={<ProtectedRoute allowedRole="teacher" />}>
+              <Route path="/dashboard/teacher" element={<TeacherLayout />}>
+                <Route index element={<TeacherDashboard />} />
+                <Route path="clockin-clockout" element={<TeacherClockInClockOut />} />
+                <Route path="classes" element={<TeacherClasses />} />
+                <Route path="students" element={<TeacherStudents />} />
+                <Route path="attendance" element={<TeacherAttendance />} />
+                <Route path="assignments" element={<TeacherAssignments />} />
+                <Route path="exams" element={<TeacherExams />} />
+                <Route path="messages" element={<TeacherMessages />} />
+                <Route path="timetable" element={<TeacherTimetable />} />
+                <Route path="reports" element={<TeacherReports />} />
+                <Route path="settings" element={<TeacherSettings />} />
+              </Route>
+            </Route>
 
-          {/* Student portal */}
-          <Route path="/dashboard/student" element={<StudentLayout />}>
-            <Route index element={<StudentDashboard />} />
-            <Route path="courses" element={<StudentCourses />} />
-            <Route path="assignments" element={<StudentAssignments />} />
-            <Route path="results" element={<StudentResults />} />
-            <Route path="timetable" element={<StudentTimetable />} />
-            <Route path="attendance" element={<StudentAttendance />} />
-            <Route path="messages" element={<StudentMessages />} />
-            <Route path="resources" element={<StudentResources />} />
-            <Route path="profile" element={<StudentProfile />} />
-            <Route path="settings" element={<StudentSettings />} />
-          </Route>
+            {/* Student portal — protected */}
+            <Route element={<ProtectedRoute allowedRole="student" />}>
+              <Route path="/dashboard/student" element={<StudentLayout />}>
+                <Route index element={<StudentDashboard />} />
+                <Route path="courses" element={<StudentCourses />} />
+                <Route path="assignments" element={<StudentAssignments />} />
+                <Route path="results" element={<StudentResults />} />
+                <Route path="timetable" element={<StudentTimetable />} />
+                <Route path="attendance" element={<StudentAttendance />} />
+                <Route path="messages" element={<StudentMessages />} />
+                <Route path="resources" element={<StudentResources />} />
+                <Route path="profile" element={<StudentProfile />} />
+                <Route path="settings" element={<StudentSettings />} />
+              </Route>
+            </Route>
 
-          {/* Parent portal */}
-          <Route path="/dashboard/parent" element={<ParentLayout />}>
-            <Route index element={<ParentDashboard />} />
-            <Route path="children" element={<ParentChildren />} />
-            <Route path="fees" element={<ParentFees />} />
-            <Route path="attendance" element={<ParentAttendance />} />
-            <Route path="results" element={<ParentResults />} />
-            <Route path="messages" element={<ParentMessages />} />
-            <Route path="calendar" element={<ParentCalendar />} />
-            <Route path="reports" element={<ParentReports />} />
-            <Route path="settings" element={<ParentSettings />} />
-          </Route>
+            {/* Parent portal — protected */}
+            <Route element={<ProtectedRoute allowedRole="parent" />}>
+              <Route path="/dashboard/parent" element={<ParentLayout />}>
+                <Route index element={<ParentDashboard />} />
+                <Route path="children" element={<ParentChildren />} />
+                <Route path="fees" element={<ParentFees />} />
+                <Route path="attendance" element={<ParentAttendance />} />
+                <Route path="results" element={<ParentResults />} />
+                <Route path="messages" element={<ParentMessages />} />
+                <Route path="calendar" element={<ParentCalendar />} />
+                <Route path="reports" element={<ParentReports />} />
+                <Route path="settings" element={<ParentSettings />} />
+              </Route>
+            </Route>
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
