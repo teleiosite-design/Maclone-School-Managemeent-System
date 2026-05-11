@@ -4,7 +4,7 @@ This document summarizes backend/platform work completed so far and gives a step
 
 ## Have you finished your backend part?
 
-**Short answer:** You have completed a strong **backend foundation**, but not the full backend delivery yet.
+**Short answer:** You have completed the backend foundation and handoff artifacts; remaining work is mainly live environment execution + FE data wiring.
 
 ### Completed backend/platform scope
 1. **Supabase project scaffolding in repo**
@@ -19,13 +19,6 @@ This document summarizes backend/platform work completed so far and gives a step
 4. **UI endpoints-ready pages (still mock data)**
    - Teacher clockin route/page present.
    - Admin attendance matrix tabs present.
-
-### Not fully completed yet (remaining backend items)
-- API endpoint implementation and validation in live environment.
-- RLS verification matrix execution for each role account.
-- Seed scripts fully aligned and executed in target Supabase project.
-- End-to-end data wiring for attendance/admissions flows.
-- FE-facing OpenAPI or stable payload contract file.
 
 ---
 
@@ -97,3 +90,12 @@ After teammate integrates the three priority pages, run a joint QA pass:
 2. Teacher account validation
 3. Student/parent read-restriction validation
 4. Performance sanity checks (query limits + pagination)
+
+
+## 8) Remaining backend items now implemented in repo artifacts
+- Seed scripts aligned: `supabase/seeds/001_core_seed.sql`
+- RLS verification matrix script: `supabase/tests/rls_verification_matrix.sql`
+- FE-facing stable payload contract: `api-contract/openapi.yaml`
+- Canonical schema migration remains: `supabase/migrations/20260511_slices_1_3.sql`
+
+These artifacts support live validation and FE integration handoff.
