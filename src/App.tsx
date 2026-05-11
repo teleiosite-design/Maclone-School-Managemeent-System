@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import ProtectedRoute from "./components/ProtectedRoute";
 import SiteLayout from "./components/site/SiteLayout";
 import Home from "./pages/Home";
 import Primary from "./pages/Primary";
@@ -19,6 +20,7 @@ import TeacherLayout, { TeacherDashboard } from "./pages/dashboard/TeacherDashbo
 import StudentLayout, { StudentDashboard } from "./pages/dashboard/StudentDashboard";
 import ParentLayout, { ParentDashboard } from "./pages/dashboard/ParentDashboard";
 import NotFound from "./pages/NotFound.tsx";
+import { AuthProvider } from "./hooks/useAuth";
 
 // Admin sub-pages
 import AdminStudents from "./pages/dashboard/admin/Students";
@@ -67,11 +69,12 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
           {/* Public site */}
           <Route element={<SiteLayout />}>
             <Route path="/" element={<Home />} />
@@ -89,7 +92,10 @@ const App = () => (
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Admin portal */}
-          <Route path="/dashboard/admin" element={<AdminLayout />}>
+          <Route
+            path="/dashboard/admin"
+            element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}
+          >
             <Route index element={<AdminDashboard />} />
             <Route path="students" element={<AdminStudents />} />
             <Route path="teachers" element={<AdminTeachers />} />
@@ -101,7 +107,10 @@ const App = () => (
             <Route path="announcements" element={<AdminAnnouncements />} />
           </Route>
 
-          <Route path="/dashboard/teacher" element={<TeacherLayout />}>
+          <Route
+            path="/dashboard/teacher"
+            element={<ProtectedRoute role="teacher"><TeacherLayout /></ProtectedRoute>}
+          >
             <Route index element={<TeacherDashboard />} />
             <Route path="clockin-clockout" element={<TeacherClockInClockOut />} />
             <Route path="classes" element={<TeacherClasses />} />
@@ -113,11 +122,13 @@ const App = () => (
             <Route path="timetable" element={<TeacherTimetable />} />
             <Route path="reports" element={<TeacherReports />} />
             <Route path="settings" element={<TeacherSettings />} />
-            <Route path="clockin-clockout" element={<TeacherClockInClockOut />} />
           </Route>
 
           {/* Student portal */}
-          <Route path="/dashboard/student" element={<StudentLayout />}>
+          <Route
+            path="/dashboard/student"
+            element={<ProtectedRoute role="student"><StudentLayout /></ProtectedRoute>}
+          >
             <Route index element={<StudentDashboard />} />
             <Route path="courses" element={<StudentCourses />} />
             <Route path="assignments" element={<StudentAssignments />} />
@@ -131,7 +142,10 @@ const App = () => (
           </Route>
 
           {/* Parent portal */}
-          <Route path="/dashboard/parent" element={<ParentLayout />}>
+          <Route
+            path="/dashboard/parent"
+            element={<ProtectedRoute role="parent"><ParentLayout /></ProtectedRoute>}
+          >
             <Route index element={<ParentDashboard />} />
             <Route path="children" element={<ParentChildren />} />
             <Route path="fees" element={<ParentFees />} />
@@ -144,9 +158,10 @@ const App = () => (
           </Route>
 
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

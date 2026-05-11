@@ -1,9 +1,29 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { ArrowLeft, Mail, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ForgotPassword() {
+  const { resetPassword } = useAuth();
   const [sent, setSent] = useState(false);
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      await resetPassword(email);
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to send reset link. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-cream p-6">
@@ -20,13 +40,7 @@ export default function ForgotPassword() {
               Enter the email linked to your portal account and we'll send a secure reset link.
             </p>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setSent(true);
-              }}
-              className="space-y-5"
-            >
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-xs font-bold tracking-wider text-navy mb-2">EMAIL ADDRESS</label>
                 <div className="relative">
@@ -34,16 +48,24 @@ export default function ForgotPassword() {
                   <input
                     type="email"
                     required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@meclones.edu.ng"
                     className="w-full pl-10 pr-4 py-3 bg-white border border-border focus:border-navy focus:outline-none text-navy"
                   />
                 </div>
               </div>
+              {error && (
+                <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+                  {error}
+                </div>
+              )}
               <button
                 type="submit"
-                className="w-full bg-navy text-gold py-4 font-bold tracking-wider text-sm hover:bg-navy/90 transition"
+                disabled={loading}
+                className="w-full bg-navy text-gold py-4 font-bold tracking-wider text-sm hover:bg-navy/90 transition disabled:cursor-not-allowed disabled:opacity-70"
               >
-                SEND RESET LINK →
+                {loading ? "SENDING..." : "SEND RESET LINK →"}
               </button>
               <p className="text-xs text-muted-foreground text-center">
                 Need help? Contact <span className="text-navy font-semibold">support@meclones.edu.ng</span>
@@ -57,7 +79,7 @@ export default function ForgotPassword() {
             </div>
             <h1 className="font-display text-2xl font-black text-navy mb-2">Check your inbox</h1>
             <p className="text-muted-foreground mb-6">
-              We've sent a password reset link. It will expire in 30 minutes.
+              We've sent a password reset link. It will expire based on your Supabase auth settings.
             </p>
             <Link
               to="/login"
