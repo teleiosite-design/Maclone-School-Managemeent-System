@@ -254,9 +254,8 @@ The project uses a **custom HSL token system** defined in `src/index.css` and ex
 - [x] Zustand store for teacher clock-in status (teacher writes → admin reads)
 
 ### ✅ Branding / Housekeeping
-- [x] Removed all `lovable-tagger` references (package, vite config, node_modules)
-- [x] Replaced Lovable favicon with custom Meclones Academy school emblem
-- [x] Cleaned all `@Lovable` / `lovable.dev` meta tags from `index.html`
+- [x] Replaced the starter favicon with a custom Meclones Academy school emblem
+- [x] Cleaned starter-template metadata from `index.html`
 - [x] Renamed package from `vite_react_shadcn_ts` → `meclones-premier`
 - [x] Version bumped to `1.0.0`
 
@@ -269,26 +268,26 @@ The project uses a **custom HSL token system** defined in `src/index.css` and ex
 #### 1. Real Authentication & Authorization
 **What:** Replace the UI-only login shell with a real auth system.
 **How:**
-- Integrate **Supabase Auth** (recommended — free tier generous, Nigerian-friendly latency via EU region) or **Firebase Auth**
-- Implement JWT-based session management
+- Select the production auth provider during the backend implementation phase
+- Implement secure session management
 - Create protected route wrappers that redirect unauthenticated users to `/login`
 - Map authenticated user `role` field to the correct portal (`/dashboard/:role`)
-- Store user profile in Supabase `profiles` table linked to `auth.users`
+- Store user profile data in the selected production database
 
 ```
 Files to create/modify:
-  src/hooks/useAuth.ts           ← session hook
+  src/hooks/useAuth.ts              ← session hook
   src/components/ProtectedRoute.tsx ← route guard
-  src/pages/auth/Login.tsx       ← wire to real API
-  src/App.tsx                    ← wrap all dashboard routes with ProtectedRoute
+  src/pages/auth/Login.tsx          ← wire to real API
+  src/App.tsx                       ← wrap all dashboard routes with ProtectedRoute
 ```
 
 #### 2. Real Database
 **What:** All data is currently hardcoded mock data inside components. None persists between page refreshes.
-**How:** Use **Supabase** (PostgreSQL) with the following core tables:
+**How:** Implement a production database/API layer with the following core entities:
 
 ```sql
--- Core tables needed
+-- Core entities needed
 users (id, role, name, email, photo_url, created_at)
 students (id, user_id, class, admission_no, guardian_id)
 teachers (id, user_id, subjects, employee_id)
@@ -308,11 +307,11 @@ announcements (id, title, body, audience, created_by, created_at)
 
 #### 3. File/Image Storage
 **What:** Student photos, profile pictures, assignment submissions, and report card PDFs are not storable yet.
-**How:** Supabase Storage buckets — `avatars`, `submissions`, `reports`.
+**How:** Add provider-backed storage buckets or folders for `avatars`, `submissions`, and `reports`.
 
 #### 4. Replace Hardcoded Placeholder Data
 **What:** Every portal uses local JS arrays as mock data. These need replacing with real API calls.
-**How:** Use **TanStack React Query** (already installed) to `useQuery` from Supabase client.
+**How:** Use **TanStack React Query** (already installed) to fetch and mutate data through a shared API client once the backend is selected.
 
 ```
 Priority pages (in order):
@@ -330,39 +329,35 @@ Priority pages (in order):
 
 #### 5. Real-Time Clock-In Sync (Admin ↔ Teacher)
 **What:** Currently uses Zustand in-memory state — admin sees teacher clock-in status, but only within the same browser tab session. Refreshing loses all data.
-**How:** Replace Zustand `attendance` slice with Supabase real-time subscriptions:
-```ts
-supabase.from('attendance_logs').on('INSERT', callback).subscribe()
-```
-The admin teacher management page then streams live clock-in events.
+**How:** Replace the in-memory `attendance` slice with persisted attendance events and real-time updates from the selected backend/API layer.
 
 #### 6. Messaging System
 **What:** Messages pages exist as UI shells with hardcoded message arrays.
-**How:** Implement with Supabase real-time:
-- `messages` table: `(id, from_id, to_id, body, read, created_at)`
-- Subscribe to new messages per user session
-- Can scope to parent↔teacher, teacher↔admin conversations
+**How:** Implement a messages entity/API with real-time delivery or polling:
+- `messages` entity: `(id, from_id, to_id, body, read, created_at)`
+- Subscribe or poll for new messages per user session
+- Scope conversations to parent↔teacher and teacher↔admin workflows
 
 #### 7. Notifications & Announcements
 **What:** Announcements page exists but doesn't broadcast to portals.
-**How:** Create a `notifications` table and show unread count badge in DashboardLayout sidebar.
+**How:** Create a notifications entity/API and show unread count badges in the dashboard shell.
 
 #### 8. Report Generation
 **What:** Reports pages exist as static layouts.
 **How:**
-- Use **Recharts** (already installed) to chart real attendance/grade data fetched from Supabase
+- Use **Recharts** (already installed) to chart real attendance/grade data fetched from the API
 - Add PDF export using `jsPDF` or `@react-pdf/renderer` for student result slips and teacher attendance reports
 
 #### 9. Timetable Persistence
 **What:** Timetable edits made by admin live only in Zustand (lost on refresh).
-**How:** Wire `setTimetableSlot` in Zustand to also write to `timetable_slots` table in Supabase. Load from Supabase on app init.
+**How:** Wire `setTimetableSlot` to persist timetable changes through the selected API, then load saved timetable data on app startup.
 
 #### 10. Fee Payment Integration
 **What:** Fees page shows records but has no payment gateway.
 **How:** Integrate **Paystack** (Nigerian payment gateway, best in class):
 - Paystack Popup SDK for one-click payment
-- Webhook endpoint (Supabase Edge Function) to confirm payment and update `fee_records`
-- WhatsApp or email receipt via Supabase + Resend
+- Server-side webhook endpoint to confirm payment and update `fee_records`
+- WhatsApp or email receipts through the chosen notification/email service
 
 ---
 
@@ -386,7 +381,7 @@ The admin teacher management page then streams live clock-in events.
 
 #### 15. SEO & OG Image
 **What:** OG image tag references a placeholder URL.
-**How:** Design a 1200×630 Meclones Academy branded OG image, host it on Supabase Storage or Cloudflare R2, and update the `og:image` meta tag.
+**How:** Design a 1200×630 Meclones Academy branded OG image, host it with the chosen asset hosting provider, and update the `og:image` meta tag.
 
 #### 16. Deployment
 **Recommended hosting:** **Vercel** (zero-config, free tier, automatic preview URLs per PR)
@@ -399,12 +394,7 @@ npm run build
 npx vercel --prod
 ```
 
-Set environment variables in Vercel dashboard:
-```
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_PAYSTACK_PUBLIC_KEY=pk_live_...
-```
+Set deployment environment variables only after selecting the production API/payment providers.
 
 #### 17. Automated Tests
 **What:** `vitest.config.ts` and `@testing-library/react` are installed but the `src/test/` folder is empty.
