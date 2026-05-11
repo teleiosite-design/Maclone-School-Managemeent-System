@@ -3,7 +3,6 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import ProtectedRoute from "./components/ProtectedRoute";
 import SiteLayout from "./components/site/SiteLayout";
 import Home from "./pages/Home";
 import Primary from "./pages/Primary";
@@ -20,7 +19,6 @@ import TeacherLayout, { TeacherDashboard } from "./pages/dashboard/TeacherDashbo
 import StudentLayout, { StudentDashboard } from "./pages/dashboard/StudentDashboard";
 import ParentLayout, { ParentDashboard } from "./pages/dashboard/ParentDashboard";
 import NotFound from "./pages/NotFound.tsx";
-import { AuthProvider } from "./hooks/useAuth";
 
 // Admin sub-pages
 import AdminStudents from "./pages/dashboard/admin/Students";
@@ -69,12 +67,11 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
           {/* Public site */}
           <Route element={<SiteLayout />}>
             <Route path="/" element={<Home />} />
@@ -92,10 +89,7 @@ const App = () => (
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Admin portal */}
-          <Route
-            path="/dashboard/admin"
-            element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}
-          >
+          <Route path="/dashboard/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="students" element={<AdminStudents />} />
             <Route path="teachers" element={<AdminTeachers />} />
@@ -107,10 +101,7 @@ const App = () => (
             <Route path="announcements" element={<AdminAnnouncements />} />
           </Route>
 
-          <Route
-            path="/dashboard/teacher"
-            element={<ProtectedRoute role="teacher"><TeacherLayout /></ProtectedRoute>}
-          >
+          <Route path="/dashboard/teacher" element={<TeacherLayout />}>
             <Route index element={<TeacherDashboard />} />
             <Route path="clockin-clockout" element={<TeacherClockInClockOut />} />
             <Route path="classes" element={<TeacherClasses />} />
@@ -122,13 +113,11 @@ const App = () => (
             <Route path="timetable" element={<TeacherTimetable />} />
             <Route path="reports" element={<TeacherReports />} />
             <Route path="settings" element={<TeacherSettings />} />
+            <Route path="clockin-clockout" element={<TeacherClockInClockOut />} />
           </Route>
 
           {/* Student portal */}
-          <Route
-            path="/dashboard/student"
-            element={<ProtectedRoute role="student"><StudentLayout /></ProtectedRoute>}
-          >
+          <Route path="/dashboard/student" element={<StudentLayout />}>
             <Route index element={<StudentDashboard />} />
             <Route path="courses" element={<StudentCourses />} />
             <Route path="assignments" element={<StudentAssignments />} />
@@ -142,10 +131,7 @@ const App = () => (
           </Route>
 
           {/* Parent portal */}
-          <Route
-            path="/dashboard/parent"
-            element={<ProtectedRoute role="parent"><ParentLayout /></ProtectedRoute>}
-          >
+          <Route path="/dashboard/parent" element={<ParentLayout />}>
             <Route index element={<ParentDashboard />} />
             <Route path="children" element={<ParentChildren />} />
             <Route path="fees" element={<ParentFees />} />
@@ -158,10 +144,9 @@ const App = () => (
           </Route>
 
           <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 

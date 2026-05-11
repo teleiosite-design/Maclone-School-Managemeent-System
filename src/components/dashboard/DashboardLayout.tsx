@@ -1,7 +1,6 @@
-import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useState, ReactNode } from "react";
 import { Bell, ChevronDown, LogOut, Menu, X } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 
 interface NavItem {
   to: string;
@@ -19,16 +18,6 @@ interface Props {
 export default function DashboardLayout({ role, userName, userMeta, nav }: Props) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
-  const navigate = useNavigate();
-  const { logout, session } = useAuth();
-  const displayName = session?.user.user_metadata?.full_name as string | undefined;
-  const displayEmail = session?.user.email ?? userMeta;
-  const resolvedUserName = displayName || userName;
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login", { replace: true });
-  };
 
   return (
     <div className="min-h-screen flex bg-cream">
@@ -68,13 +57,12 @@ export default function DashboardLayout({ role, userName, userMeta, nav }: Props
           })}
         </nav>
         <div className="p-3 border-t border-white/10">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-white/70 hover:text-gold"
+          <Link
+            to="/login"
+            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-white/70 hover:text-gold"
           >
             <LogOut size={18} /> Logout
-          </button>
+          </Link>
         </div>
       </aside>
 
@@ -97,11 +85,11 @@ export default function DashboardLayout({ role, userName, userMeta, nav }: Props
               </button>
               <div className="flex items-center gap-3 pl-4 border-l border-border">
                 <div className="w-9 h-9 bg-navy text-gold flex items-center justify-center font-bold text-sm">
-                  {resolvedUserName.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+                  {userName.split(" ").map((s) => s[0]).slice(0, 2).join("")}
                 </div>
                 <div className="hidden sm:block text-right">
-                  <div className="text-sm font-bold text-navy leading-tight">{resolvedUserName}</div>
-                  <div className="text-[11px] text-muted-foreground">{displayEmail}</div>
+                  <div className="text-sm font-bold text-navy leading-tight">{userName}</div>
+                  <div className="text-[11px] text-muted-foreground">{userMeta}</div>
                 </div>
                 <ChevronDown size={14} className="text-muted-foreground" />
               </div>

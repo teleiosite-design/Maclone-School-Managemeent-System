@@ -74,17 +74,14 @@ meclones-premier/
 │   │   └── index.ts           # Zustand global state (timetables, teacher attendance)
 │   │
 │   ├── lib/
-│   │   ├── utils.ts           # cn() helper (clsx + tailwind-merge)
-│   │   └── supabaseAuth.ts    # Supabase Auth REST helper
+│   │   └── utils.ts           # cn() helper (clsx + tailwind-merge)
 │   │
-│   ├── hooks/
-│   │   └── useAuth.tsx        # Auth context/session hook
+│   ├── hooks/                 # Custom React hooks (currently minimal)
 │   │
 │   ├── assets/                # Bundled static assets (images, SVGs)
 │   │
 │   ├── components/
 │   │   ├── NavLink.tsx        # Active-aware router link wrapper
-│   │   ├── ProtectedRoute.tsx # Dashboard route guard
 │   │   ├── ui/                # shadcn/ui primitives (button, card, dialog, etc.)
 │   │   ├── site/              # Public website components
 │   │   │   ├── SiteLayout.tsx
@@ -214,12 +211,11 @@ The project uses a **custom HSL token system** defined in `src/index.css` and ex
 - [x] Hero sections, CTA banners, and mobile sticky CTA
 - [x] SEO meta tags, OG tags, Twitter card tags (Meclones-branded)
 
-### ✅ Authentication & Access Control
+### ✅ Authentication Shell
 - [x] Login page with role selector (Admin / Teacher / Student / Parent)
-- [x] Forgot Password page wired to Supabase password recovery
-- [x] Supabase Auth email/password sign-in foundation
-- [x] Local session storage and refresh handling
-- [x] Protected dashboard routes for each role (`/dashboard/:role`)
+- [x] Forgot Password page
+- [x] Route-based portal separation (each role has its own `/dashboard/:role` tree)
+> ⚠️ Authentication is **UI only** — no real backend auth, no session tokens, no protected routes yet.
 
 ### ✅ Admin Portal
 - [x] Dashboard overview with KPI stat cards
@@ -272,12 +268,11 @@ The project uses a **custom HSL token system** defined in `src/index.css` and ex
 #### 1. Real Authentication & Authorization
 **What:** Replace the UI-only login shell with a real auth system.
 **How:**
-- Use **Supabase Auth** for email/password sign-in
-- Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel and local `.env` files
+- Select the production auth provider during the backend implementation phase
 - Implement secure session management
 - Create protected route wrappers that redirect unauthenticated users to `/login`
 - Map authenticated user `role` field to the correct portal (`/dashboard/:role`)
-- Store user role/profile data in Supabase user metadata or a future `profiles` table
+- Store user profile data in the selected production database
 
 ```
 Files to create/modify:
@@ -289,7 +284,7 @@ Files to create/modify:
 
 #### 2. Real Database
 **What:** All data is currently hardcoded mock data inside components. None persists between page refreshes.
-**How:** Implement the production database/API layer in Supabase with the following core entities:
+**How:** Implement a production database/API layer with the following core entities:
 
 ```sql
 -- Core entities needed
@@ -312,11 +307,11 @@ announcements (id, title, body, audience, created_by, created_at)
 
 #### 3. File/Image Storage
 **What:** Student photos, profile pictures, assignment submissions, and report card PDFs are not storable yet.
-**How:** Add Supabase Storage buckets for `avatars`, `submissions`, and `reports`.
+**How:** Add provider-backed storage buckets or folders for `avatars`, `submissions`, and `reports`.
 
 #### 4. Replace Hardcoded Placeholder Data
 **What:** Every portal uses local JS arrays as mock data. These need replacing with real API calls.
-**How:** Use **TanStack React Query** (already installed) to fetch and mutate data through the shared Supabase/API client.
+**How:** Use **TanStack React Query** (already installed) to fetch and mutate data through a shared API client once the backend is selected.
 
 ```
 Priority pages (in order):
@@ -334,7 +329,7 @@ Priority pages (in order):
 
 #### 5. Real-Time Clock-In Sync (Admin ↔ Teacher)
 **What:** Currently uses Zustand in-memory state — admin sees teacher clock-in status, but only within the same browser tab session. Refreshing loses all data.
-**How:** Replace the in-memory `attendance` slice with persisted attendance events and real-time updates from Supabase or the shared API layer.
+**How:** Replace the in-memory `attendance` slice with persisted attendance events and real-time updates from the selected backend/API layer.
 
 #### 6. Messaging System
 **What:** Messages pages exist as UI shells with hardcoded message arrays.
@@ -355,7 +350,7 @@ Priority pages (in order):
 
 #### 9. Timetable Persistence
 **What:** Timetable edits made by admin live only in Zustand (lost on refresh).
-**How:** Wire `setTimetableSlot` to persist timetable changes through Supabase/API calls, then load saved timetable data on app startup.
+**How:** Wire `setTimetableSlot` to persist timetable changes through the selected API, then load saved timetable data on app startup.
 
 #### 10. Fee Payment Integration
 **What:** Fees page shows records but has no payment gateway.
@@ -386,7 +381,7 @@ Priority pages (in order):
 
 #### 15. SEO & OG Image
 **What:** OG image tag references a placeholder URL.
-**How:** Design a 1200×630 Meclones Academy branded OG image, host it with Supabase Storage or the chosen asset hosting provider, and update the `og:image` meta tag.
+**How:** Design a 1200×630 Meclones Academy branded OG image, host it with the chosen asset hosting provider, and update the `og:image` meta tag.
 
 #### 16. Deployment
 **Recommended hosting:** **Vercel** (zero-config, free tier, automatic preview URLs per PR)
@@ -399,12 +394,7 @@ npm run build
 npx vercel --prod
 ```
 
-Set required environment variables in Vercel:
-```
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_PAYSTACK_PUBLIC_KEY=pk_live_...
-```
+Set deployment environment variables only after selecting the production API/payment providers.
 
 #### 17. Automated Tests
 **What:** `vitest.config.ts` and `@testing-library/react` are installed but the `src/test/` folder is empty.
@@ -446,9 +436,9 @@ npm run dev
 | `npm run test` | Run Vitest test suite once |
 | `npm run test:watch` | Run Vitest in watch mode |
 
-### Authentication Setup
+### Demo Credentials (Current UI-only Login)
 
-The login page now authenticates against Supabase Auth. Create users in your Supabase dashboard, then add a `role` value in user metadata or app metadata when you want Supabase to control the redirect. Supported roles are `admin`, `teacher`, `student`, and `parent`.
+The login page accepts any input and routes based on the selected role. No password is validated yet.
 
 | Role | Route after login |
 |---|---|
