@@ -59,6 +59,36 @@ Since the GitHub repository is on a separate account, use the **Vercel CLI** to 
 
 ---
 
+## 🔐 Administrative Access & Setup
+
+If you are locked out or seeing "Infinite Recursion" errors, follow these steps:
+
+### 1. Fix Database Security Policies (SQL Editor)
+Run this in your Supabase SQL Editor to fix the infinite recursion loop in the `profiles` table:
+
+```sql
+-- Fix infinite recursion in profiles policy
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON profiles;
+CREATE POLICY "Profiles are viewable by authenticated users" ON profiles
+  FOR SELECT TO authenticated
+  USING (true);
+
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+CREATE POLICY "Users can update own profile" ON profiles
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = id);
+```
+
+### 2. Set Admin Credentials
+To set **admin@meclones.com** with password **admin123**:
+1. Add `SUPABASE_SERVICE_ROLE_KEY` to your `.env` file.
+2. Run the setup script:
+   ```bash
+   node scripts/setup_admin.js
+   ```
+
+---
+
 ## 📂 File Structure (Supabase-Specific)
 
 - `src/lib/supabase.ts`: Centralized Supabase client configuration.
