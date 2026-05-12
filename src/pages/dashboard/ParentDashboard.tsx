@@ -1,11 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import StatCard from "@/components/dashboard/StatCard";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard, Users, ClipboardCheck, Award, CreditCard,
   MessageSquare, Calendar, FileText, Settings,
-  TrendingUp, BookOpen, Wallet,
+  TrendingUp, Wallet, Megaphone, Loader2
 } from "lucide-react";
 
 const nav = [
@@ -21,170 +23,125 @@ const nav = [
 ];
 
 export default function ParentLayout() {
-  return <DashboardLayout role="Parent" userName="Mrs. Adeyemi" userMeta="Parent / Guardian" nav={nav} />;
+  const { profile } = useAuth();
+  return <DashboardLayout role="Parent" userName={profile?.full_name ?? "Parent"} userMeta="Guardian Portal" nav={nav} />;
 }
-
-const children = [
-  { name: "David Okafor", grade: "SS 2", attendance: 92, average: 85, color: "bg-navy" },
-  { name: "Grace Okafor", grade: "Primary 5", attendance: 96, average: 89, color: "bg-emerald-600" },
-];
 
 export function ParentDashboard() {
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
+
+  // REAL DATA
+  const { data: parentData, isLoading: loadingParent } = useQuery<any>({
+    queryKey: ["parent-profile", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("parents").select("id").eq("profile_id", user?.id).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user
+  });
+
+  const { data: announcements = [] } = useQuery<any[]>({
+    queryKey: ["announcements-parent"],
+    queryFn: async () => {
+      const { data } = await supabase.from("announcements").select("*").order("created_at", { ascending: false }).limit(3);
+      return data ?? [];
+    }
+  });
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-black text-navy">Parent Dashboard</h1>
-        <p className="text-muted-foreground text-sm">Welcome back, Mrs. Adeyemi 👋</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="font-display text-3xl font-black text-navy">Parent Dashboard</h1>
+          <p className="text-muted-foreground text-sm">Welcome back, {profile?.full_name} 👋</p>
+        </div>
+        {loadingParent && <Loader2 className="animate-spin text-navy" size={20} />}
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={<Users size={22} />} label="Children Enrolled" value="2" tone="navy" />
-        <StatCard icon={<ClipboardCheck size={22} />} label="Avg. Attendance" value="94%" tone="green" />
-        <StatCard icon={<TrendingUp size={22} />} label="Avg. Performance" value="87%" tone="purple" />
-        <StatCard icon={<Wallet size={22} />} label="Outstanding Fees" value="₦0" hint="All paid" tone="gold" />
+        <StatCard icon={<Users size={22} />} label="My Children" value="--" hint="Enrolled" tone="navy" />
+        <StatCard icon={<ClipboardCheck size={22} />} label="Avg. Attendance" value="--" tone="green" />
+        <StatCard icon={<TrendingUp size={22} />} label="Avg. Performance" value="--" tone="purple" />
+        <StatCard icon={<Wallet size={22} />} label="Fee Balance" value="₦--" hint="Check Fees" tone="gold" />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white border border-border p-5">
-            <h3 className="font-bold text-navy mb-4">My Children</h3>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {children.map((c, i) => (
-                <div key={i} className="border border-border p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className={`w-12 h-12 ${c.color} text-white flex items-center justify-center font-bold`}>
-                      {c.name.split(" ").map((s) => s[0]).join("")}
+            <h3 className="font-bold text-navy mb-4">Latest Announcements</h3>
+            <div className="space-y-4">
+              {announcements.length === 0 ? (
+                <div className="text-sm text-muted-foreground italic p-8 text-center border-2 border-dashed border-border">
+                  No active announcements for parents.
+                </div>
+              ) : (
+                announcements.map((a, i) => (
+                  <div key={i} className="flex gap-4 p-4 border border-border hover:shadow-lg transition group">
+                    <div className="w-10 h-10 bg-navy text-gold flex items-center justify-center shrink-0">
+                      <Megaphone size={18} />
                     </div>
                     <div>
-                      <div className="font-bold text-navy">{c.name}</div>
-                      <div className="text-xs text-muted-foreground">{c.grade}</div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-bold text-navy text-sm group-hover:text-gold transition">{a.title}</h4>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{new Date(a.created_at).toLocaleDateString()}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{a.body}</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 text-center">
-                    <div className="bg-secondary p-2">
-                      <div className="text-[10px] text-muted-foreground">Attendance</div>
-                      <div className="font-bold text-navy">{c.attendance}%</div>
-                    </div>
-                    <div className="bg-secondary p-2">
-                      <div className="text-[10px] text-muted-foreground">Average</div>
-                      <div className="font-bold text-navy">{c.average}%</div>
-                    </div>
-                  </div>
-                  <button onClick={() => navigate("/dashboard/parent/children")} className={`w-full mt-3 ${c.color} text-white py-2 text-xs font-bold tracking-wider hover:opacity-90`}>VIEW DETAILS</button>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
           <div className="bg-white border border-border p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-navy">Recent Results</h3>
-              <Link to="/dashboard/parent/results" className="text-xs text-navy font-semibold hover:text-gold">View All</Link>
+              <h3 className="font-bold text-navy">Child Performance Overview</h3>
+              <Link to="/dashboard/parent/results" className="text-xs text-navy font-semibold hover:text-gold">View Results</Link>
             </div>
-            <div className="space-y-3 text-sm">
-              {[
-                ["David Okafor", "Mathematics Test 2", "88%", "A"],
-                ["Grace Okafor", "English Reading Test", "92%", "A"],
-                ["David Okafor", "Chemistry Practical", "90%", "A"],
-                ["Grace Okafor", "Science Project", "85%", "B"],
-              ].map((r, i) => (
-                <div key={i} className="flex items-center justify-between border-b border-border pb-3 last:border-0">
-                  <div>
-                    <div className="font-semibold text-navy">{r[1]}</div>
-                    <div className="text-[11px] text-muted-foreground">{r[0]}</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="font-bold text-navy">{r[2]}</div>
-                    <span className="w-7 h-7 bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-xs">{r[3]}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white border border-border p-5">
-            <h3 className="font-bold text-navy mb-4">Fee Payment History</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-xs text-muted-foreground border-b border-border">
-                  <tr>
-                    <th className="text-left py-2 font-medium">Description</th>
-                    <th className="text-left font-medium">Child</th>
-                    <th className="text-left font-medium">Date</th>
-                    <th className="text-right font-medium">Amount</th>
-                    <th className="text-right font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="text-navy">
-                  {[
-                    ["Term 2 Tuition", "David Okafor", "May 12", "₦450,000", "Paid"],
-                    ["Term 2 Tuition", "Grace Okafor", "May 12", "₦300,000", "Paid"],
-                    ["Uniform & Books", "David Okafor", "Apr 30", "₦35,000", "Paid"],
-                  ].map((r, i) => (
-                    <tr key={i} className="border-b border-border last:border-0">
-                      <td className="py-3 font-semibold">{r[0]}</td>
-                      <td>{r[1]}</td>
-                      <td>{r[2]}</td>
-                      <td className="text-right font-bold">{r[3]}</td>
-                      <td className="text-right"><span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-1">{r[4].toUpperCase()}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="p-8 text-center border-2 border-dashed border-border text-muted-foreground text-sm italic">
+               Connect your children's profiles to see their live grades and attendance records here.
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
-          <div className="bg-navy text-white p-5">
-            <p className="eyebrow text-gold mb-2">Next Payment</p>
-            <div className="font-display text-3xl font-black">₦750,000</div>
-            <div className="text-white/70 text-sm mt-1">Term 3 Tuition · Due Sep 5</div>
-            <button onClick={() => navigate("/dashboard/parent/fees")} className="w-full mt-4 bg-gold text-navy py-3 font-bold tracking-wider text-sm hover:bg-gold/90">PAY NOW →</button>
+          <div className="bg-navy text-white p-6 shadow-xl">
+            <p className="text-gold text-[10px] font-bold tracking-[0.2em] uppercase mb-1">Payments</p>
+            <div className="font-display text-3xl font-black mb-1">₦0.00</div>
+            <div className="text-white/60 text-[11px]">Outstanding balance for this session.</div>
+            <button onClick={() => navigate("/dashboard/parent/fees")} className="w-full mt-6 bg-gold text-navy py-3 font-bold tracking-widest text-xs hover:bg-white transition uppercase">GO TO FEE PORTAL →</button>
           </div>
 
           <div className="bg-white border border-border p-5">
-            <h3 className="font-bold text-navy mb-3">Messages</h3>
-            <div className="space-y-3 text-sm">
-              {[
-                ["Mr. Daniel", "Math performance update", "10m"],
-                ["Admin", "PTA meeting reminder", "2h"],
-                ["Mrs. James", "Parent-teacher session", "1d"],
-              ].map((m, i) => (
-                <div key={i} className="flex items-start gap-3 border-b border-border pb-2 last:border-0">
-                  <div className="w-8 h-8 bg-navy/10 text-navy rounded-full flex items-center justify-center text-xs font-bold">
-                    {m[0][0]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-navy text-sm">{m[0]}</div>
-                    <div className="text-[11px] text-muted-foreground truncate">{m[1]}</div>
-                  </div>
-                  <div className="text-[10px] text-muted-foreground">{m[2]}</div>
-                </div>
-              ))}
+            <h3 className="font-bold text-navy mb-3">Quick Actions</h3>
+            <div className="grid grid-cols-1 gap-2">
+              <button onClick={() => navigate("/dashboard/parent/messages")} className="bg-navy text-gold py-3 text-xs font-bold tracking-wider hover:bg-navy/90 text-left px-4 flex justify-between items-center transition">
+                MESSAGE TEACHER <MessageSquare size={16} />
+              </button>
+              <button onClick={() => navigate("/dashboard/parent/calendar")} className="bg-navy text-gold py-3 text-xs font-bold tracking-wider hover:bg-navy/90 text-left px-4 flex justify-between items-center transition">
+                SCHOOL CALENDAR <Calendar size={16} />
+              </button>
+              <button onClick={() => navigate("/dashboard/parent/reports")} className="border border-navy text-navy py-3 text-xs font-bold tracking-wider hover:bg-navy hover:text-gold text-left px-4 flex justify-between items-center transition">
+                DOWNLOAD REPORTS <FileText size={16} />
+              </button>
             </div>
           </div>
 
           <div className="bg-white border border-border p-5">
             <h3 className="font-bold text-navy mb-3">Upcoming Events</h3>
-            <div className="space-y-3 text-sm">
-              {[
-                ["Jun 5", "PTA Meeting", "10:00 AM"],
-                ["Jun 10", "Midterm Exams Begin", "All week"],
-                ["Jun 22", "Sports Day", "9:00 AM"],
-              ].map((e, i) => (
-                <div key={i} className="flex items-center gap-3 border-b border-border pb-2 last:border-0">
-                  <div className="bg-gold/20 text-navy text-center px-2 py-1 w-12">
-                    <div className="text-[9px] font-bold">{e[0].split(" ")[0]}</div>
-                    <div className="font-bold text-sm leading-none">{e[0].split(" ")[1]}</div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-navy">{e[1]}</div>
-                    <div className="text-[11px] text-muted-foreground">{e[2]}</div>
-                  </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-gold/20 flex flex-col items-center justify-center text-navy shrink-0">
+                  <span className="text-[9px] font-bold">JUN</span>
+                  <span className="text-sm font-black leading-none">10</span>
                 </div>
-              ))}
+                <div>
+                  <div className="text-xs font-bold text-navy">Mid-Term Break</div>
+                  <div className="text-[10px] text-muted-foreground">School holiday begins</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

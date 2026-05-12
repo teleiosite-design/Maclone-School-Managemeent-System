@@ -21,7 +21,7 @@ export default function TeacherClockInClockOut() {
   const todayStr = now.toISOString().split("T")[0];
 
   // Fetch teacher record
-  const { data: teacher } = useQuery({
+  const { data: teacher } = useQuery<any>({
     queryKey: ["teacher-record", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -36,30 +36,32 @@ export default function TeacherClockInClockOut() {
   });
 
   // Fetch today's log
-  const { data: todayLog, isLoading } = useQuery({
+  const { data: todayLog, isLoading } = useQuery<any>({
     queryKey: ["attendance-log-today", teacher?.id, todayStr],
     queryFn: async () => {
-      const { data } = await supabase
+      if (!teacher?.id) return null;
+      const { data } = await (supabase
         .from("attendance_logs")
         .select("*")
-        .eq("teacher_id", teacher!.id)
+        .eq("teacher_id", teacher.id)
         .eq("date", todayStr)
-        .maybeSingle();
+        .maybeSingle() as any);
       return data;
     },
     enabled: !!teacher?.id,
   });
 
   // Fetch history (last 14 days)
-  const { data: history = [] } = useQuery({
+  const { data: history = [] } = useQuery<any[]>({
     queryKey: ["attendance-history", teacher?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (!teacher?.id) return [];
+      const { data, error } = await (supabase
         .from("attendance_logs")
         .select("*")
-        .eq("teacher_id", teacher!.id)
+        .eq("teacher_id", teacher.id)
         .order("date", { ascending: false })
-        .limit(14);
+        .limit(14) as any);
       if (error) throw error;
       return data ?? [];
     },
@@ -68,11 +70,12 @@ export default function TeacherClockInClockOut() {
 
   const checkInMutation = useMutation({
     mutationFn: async () => {
+      if (!teacher?.id) throw new Error("Teacher record not found");
       const checkInTime = new Date().toISOString();
       const hour = new Date().getHours();
       const status = hour < 9 ? "present" : hour === 9 && new Date().getMinutes() <= 15 ? "late" : "late";
-      const { error } = await supabase.from("attendance_logs").insert({
-        teacher_id: teacher!.id,
+      const { error } = await (supabase.from("attendance_logs") as any).insert({
+        teacher_id: teacher.id,
         check_in: checkInTime,
         date: todayStr,
         status,
@@ -89,10 +92,10 @@ export default function TeacherClockInClockOut() {
 
   const checkOutMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase
-        .from("attendance_logs")
+      if (!todayLog?.id) throw new Error("Check-in record not found");
+      const { error } = await (supabase.from("attendance_logs") as any)
         .update({ check_out: new Date().toISOString() })
-        .eq("id", todayLog!.id);
+        .eq("id", todayLog.id);
       if (error) throw error;
     },
     onSuccess: () => {

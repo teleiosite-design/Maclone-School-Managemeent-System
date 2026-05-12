@@ -1,12 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import StatCard from "@/components/dashboard/StatCard";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard, BookOpen, Users, FileText,
   Award, Calendar, MessageSquare, BarChart3, Settings,
   CheckCircle2, ClipboardCheck, FileEdit, Megaphone, Clock, TimerReset,
+  Loader2
 } from "lucide-react";
-import { useStore } from "@/store";
+import { toast } from "sonner";
 
 const nav = [
   { to: "/dashboard/teacher", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
@@ -14,7 +18,6 @@ const nav = [
   { to: "/dashboard/teacher/classes", label: "My Classes", icon: <BookOpen size={18} /> },
   { to: "/dashboard/teacher/students", label: "Students", icon: <Users size={18} /> },
   { to: "/dashboard/teacher/attendance", label: "Attendance", icon: <ClipboardCheck size={18} /> },
-  { to: "/dashboard/teacher/clockin-clockout", label: "Clockin-Clockout", icon: <Clock size={18} /> },
   { to: "/dashboard/teacher/assignments", label: "Assignments", icon: <FileText size={18} /> },
   { to: "/dashboard/teacher/exams", label: "Exams & Grading", icon: <Award size={18} /> },
   { to: "/dashboard/teacher/timetable", label: "Timetable", icon: <Calendar size={18} /> },
@@ -24,167 +27,160 @@ const nav = [
 ];
 
 export default function TeacherLayout() {
-  return <DashboardLayout role="Teacher" userName="Mr. Daniel Marko" userMeta="Mathematics Teacher" nav={nav} />;
+  const { profile } = useAuth();
+  return <DashboardLayout role="Teacher" userName={profile?.full_name ?? "Teacher"} userMeta={profile?.role ?? "Staff"} nav={nav} />;
 }
-
-const classes = [
-  { name: "JSS 1A", subject: "Mathematics", students: 24, attendance: 95, score: 78, color: "bg-navy" },
-  { name: "JSS 2B", subject: "Mathematics", students: 28, attendance: 90, score: 82, color: "bg-emerald-600" },
-  { name: "JSS 3A", subject: "Mathematics", students: 26, attendance: 88, score: 75, color: "bg-violet-600" },
-  { name: "SS 1A", subject: "Mathematics", students: 22, attendance: 93, score: 81, color: "bg-orange-500" },
-  { name: "SS 2B", subject: "Mathematics", students: 20, attendance: 91, score: 79, color: "bg-teal-600" },
-];
-
-const schedule = [
-  { time: "08:00 AM", title: "JSS 1A - Mathematics", room: "Room 12", status: "Completed" },
-  { time: "10:00 AM", title: "JSS 2B - Mathematics", room: "Room 15", status: "In Progress" },
-  { time: "12:00 PM", title: "Break", room: "Lunch", status: "Break" },
-  { time: "01:00 PM", title: "SS 1A - Mathematics", room: "Room 18", status: "Upcoming" },
-  { time: "03:00 PM", title: "SS 2B - Mathematics", room: "Room 20", status: "Upcoming" },
-];
 
 export function TeacherDashboard() {
   const navigate = useNavigate();
-  const { attendance, toggleClockIn } = useStore();
-  const teacherAttendance = attendance["T-001"] || { isClockedIn: false, lastActionTime: null };
+  const { user, profile } = useAuth();
+  const qc = useQueryClient();
+  const today = new Date().toISOString().split('T')[0];
+
+  // REAL DATA
+  const { data: teacherData } = useQuery<any>({
+    queryKey: ["teacher-profile", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("teachers").select("id, employee_id, subjects").eq("profile_id", user?.id).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user
+  });
+
+  const { data: attendanceLog, isLoading: loadingStatus } = useQuery<any>({
+    queryKey: ["attendance-status", teacherData?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("attendance_logs").select("*").eq("teacher_id", teacherData?.id).eq("date", today).order("check_in", { ascending: false }).limit(1).maybeSingle();
+      return data;
+    },
+    enabled: !!teacherData?.id
+  });
+
+  const clockMutation = useMutation({
+    mutationFn: async () => {
+      if (!teacherData?.id) return;
+      const isClockedInNow = attendanceLog && !(attendanceLog as any).check_out;
+      
+      if (isClockedInNow) {
+        await (supabase.from("attendance_logs") as any).update({ check_out: new Date().toISOString() }).eq("id", (attendanceLog as any).id);
+      } else {
+        await (supabase.from("attendance_logs") as any).insert({ teacher_id: teacherData.id, check_in: new Date().toISOString(), date: today, status: "present" });
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["attendance-status"] });
+      toast.success(attendanceLog && (attendanceLog as any).check_out ? "Clocked in successfully" : "Clocked out successfully");
+    }
+  });
+
+  const { data: announcements = [] } = useQuery<any[]>({
+    queryKey: ["announcements-teacher"],
+    queryFn: async () => {
+      const { data } = await supabase.from("announcements").select("*").order("created_at", { ascending: false }).limit(3);
+      return data ?? [];
+    }
+  });
+
+  const isClockedIn = !!(attendanceLog && !(attendanceLog as any).check_out);
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="font-display text-3xl font-black text-navy">Teacher Dashboard</h1>
-          <p className="text-muted-foreground text-sm">Welcome back, Mr. Daniel Marko 👋</p>
+          <p className="text-muted-foreground text-sm">Welcome back, {profile?.full_name} 👋</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
             <div className="text-xs text-muted-foreground font-bold tracking-wider">STATUS</div>
-            <div className={`text-sm font-bold ${teacherAttendance.isClockedIn ? "text-emerald-600" : "text-amber-600"}`}>
-              {teacherAttendance.isClockedIn ? "Clocked In" : "Clocked Out"}
+            <div className={`text-sm font-bold ${isClockedIn ? "text-emerald-600" : "text-amber-600"}`}>
+              {loadingStatus ? "..." : (isClockedIn ? "Clocked In" : "Clocked Out")}
             </div>
           </div>
           <button 
-            onClick={() => toggleClockIn("T-001")}
-            className={`flex items-center gap-2 px-5 py-2.5 text-xs font-bold tracking-wider transition ${
-              teacherAttendance.isClockedIn 
+            disabled={clockMutation.isPending || !teacherData}
+            onClick={() => clockMutation.mutate()}
+            className={`flex items-center gap-2 px-5 py-2.5 text-xs font-bold tracking-wider transition disabled:opacity-50 ${
+              isClockedIn 
                 ? "bg-amber-100 text-amber-700 hover:bg-amber-200" 
                 : "bg-emerald-600 text-white hover:bg-emerald-700"
             }`}
           >
-            <Clock size={16} />
-            {teacherAttendance.isClockedIn ? "CLOCK OUT" : "CLOCK IN"}
+            {clockMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Clock size={16} />}
+            {isClockedIn ? "CLOCK OUT" : "CLOCK IN"}
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={<BookOpen size={22} />} label="Total Classes" value="5" tone="navy" />
-        <StatCard icon={<Users size={22} />} label="Total Students" value="120" tone="green" />
-        <StatCard icon={<ClipboardCheck size={22} />} label="Attendance Rate" value="92%" tone="gold" />
-        <StatCard icon={<FileText size={22} />} label="Pending Reviews" value="8" tone="orange" />
+        <StatCard icon={<BookOpen size={22} />} label="Total Classes" value={teacherData?.subjects?.length?.toString() || "0"} tone="navy" />
+        <StatCard icon={<Users size={22} />} label="Student Reach" value="--" tone="green" />
+        <StatCard icon={<ClipboardCheck size={22} />} label="My Attendance" value={attendanceLog ? "Present" : "None"} tone="gold" />
+        <StatCard icon={<FileText size={22} />} label="Assignments" value="--" tone="orange" />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white border border-border p-5">
-            <h3 className="font-bold text-navy mb-4">My Classes</h3>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {classes.map((c, i) => (
-                <div key={i} className="border border-border p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className={`w-10 h-10 ${c.color} text-white flex items-center justify-center font-bold text-sm`}>
-                      {c.name.split(" ")[0]}
+            <h3 className="font-bold text-navy mb-4">Recent Announcements</h3>
+            <div className="space-y-4">
+              {announcements.length === 0 ? (
+                <div className="text-sm text-muted-foreground italic">No announcements to display.</div>
+              ) : (
+                announcements.map((a, i) => (
+                  <div key={i} className="border-l-4 border-gold bg-secondary/20 p-4">
+                    <div className="flex justify-between items-start mb-1">
+                      <h4 className="font-bold text-navy text-sm">{a.title}</h4>
+                      <span className="text-[10px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
                     </div>
-                    <div>
-                      <div className="font-bold text-navy">{c.name}</div>
-                      <div className="text-xs text-muted-foreground">{c.subject} · {c.students} students</div>
-                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{a.body}</p>
                   </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Attendance</span><span className="font-bold text-emerald-600">{c.attendance}%</span></div>
-                    <div className="h-1 bg-secondary"><div className="h-full bg-emerald-500" style={{ width: `${c.attendance}%` }} /></div>
-                    <div className="flex justify-between mt-2"><span className="text-muted-foreground">Avg. Score</span><span className="font-bold text-navy">{c.score}%</span></div>
-                  </div>
-                  <button onClick={() => navigate("/dashboard/teacher/classes")} className={`w-full mt-3 ${c.color} text-white py-2 text-xs font-bold tracking-wider hover:opacity-90`}>VIEW CLASS</button>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
           <div className="bg-white border border-border p-5">
-            <h3 className="font-bold text-navy mb-4">Assignments Overview</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-xs text-muted-foreground border-b border-border">
-                  <tr>
-                    <th className="text-left py-2 font-medium">Title</th>
-                    <th className="text-left font-medium">Class</th>
-                    <th className="text-left font-medium">Due</th>
-                    <th className="text-left font-medium">Submitted</th>
-                    <th className="text-right font-medium">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="text-navy">
-                  {[
-                    ["Algebra Basics Worksheet", "JSS 2B", "May 31", "23/28"],
-                    ["Linear Equations Quiz", "JSS 1A", "May 30", "20/24"],
-                    ["Midterm Assignment", "JSS 3A", "May 28", "21/26"],
-                    ["Statistics Project", "SS 1A", "Jun 2", "18/22"],
-                  ].map((r, i) => (
-                    <tr key={i} className="border-b border-border last:border-0">
-                      <td className="py-3 font-semibold">{r[0]}</td>
-                      <td>{r[1]}</td>
-                      <td>{r[2]}</td>
-                      <td>{r[3]}</td>
-                      <td className="text-right"><button onClick={() => navigate("/dashboard/teacher/assignments")} className="bg-navy text-gold px-3 py-1 text-xs font-bold hover:bg-navy/90">GRADE</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <h3 className="font-bold text-navy mb-4">My Subject Load</h3>
+            <div className="flex flex-wrap gap-2">
+              {(teacherData as any)?.subjects?.map((s: string) => (
+                <div key={s} className="bg-navy text-gold px-4 py-2 text-xs font-bold tracking-widest uppercase border border-navy shadow-[4px_4px_0px_0px_rgba(28,43,72,0.1)]">
+                  {s}
+                </div>
+              ))}
+              {(!(teacherData as any)?.subjects || (teacherData as any).subjects.length === 0) && (
+                <div className="text-sm text-muted-foreground">No subjects assigned yet.</div>
+              )}
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
           <div className="bg-white border border-border p-5">
-            <h3 className="font-bold text-navy mb-4">Today's Schedule</h3>
-            <div className="space-y-3">
-              {schedule.map((s, i) => (
-                <div key={i} className="flex items-start gap-3 text-sm border-b border-border pb-3 last:border-0">
-                  <div className="text-xs text-muted-foreground font-mono w-16 pt-0.5">{s.time}</div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-navy">{s.title}</div>
-                    <div className="text-[11px] text-muted-foreground">{s.room}</div>
-                  </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 ${
-                    s.status === "Completed" ? "bg-emerald-100 text-emerald-700" :
-                    s.status === "In Progress" ? "bg-gold/30 text-navy" :
-                    s.status === "Break" ? "bg-secondary text-muted-foreground" :
-                    "bg-violet-100 text-violet-700"
-                  }`}>{s.status}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white border border-border p-5">
             <h3 className="font-bold text-navy mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => navigate("/dashboard/teacher/attendance")} className="border border-navy text-navy py-2.5 text-xs font-bold tracking-wider flex items-center justify-center gap-1 hover:bg-navy hover:text-gold"><CheckCircle2 size={14} />ATTEND.</button>
-              <button onClick={() => navigate("/dashboard/teacher/assignments")} className="border border-navy text-navy py-2.5 text-xs font-bold tracking-wider flex items-center justify-center gap-1 hover:bg-navy hover:text-gold"><FileEdit size={14} />ASSIGN</button>
-              <button onClick={() => navigate("/dashboard/teacher/exams")} className="border border-navy text-navy py-2.5 text-xs font-bold tracking-wider flex items-center justify-center gap-1 hover:bg-navy hover:text-gold"><Award size={14} />GRADES</button>
-              <button onClick={() => navigate("/dashboard/teacher/messages")} className="border border-navy text-navy py-2.5 text-xs font-bold tracking-wider flex items-center justify-center gap-1 hover:bg-navy hover:text-gold"><Megaphone size={14} />NOTICE</button>
+            <div className="grid grid-cols-1 gap-2">
+              <button onClick={() => navigate("/dashboard/teacher/attendance")} className="bg-navy text-gold py-2.5 text-xs font-bold tracking-wider flex items-center justify-between px-4 hover:bg-navy/90">
+                MARK ATTENDANCE <CheckCircle2 size={14} />
+              </button>
+              <button onClick={() => navigate("/dashboard/teacher/assignments")} className="bg-navy text-gold py-2.5 text-xs font-bold tracking-wider flex items-center justify-between px-4 hover:bg-navy/90">
+                CREATE ASSIGNMENT <FileEdit size={14} />
+              </button>
+              <button onClick={() => navigate("/dashboard/teacher/messages")} className="border border-navy text-navy py-2.5 text-xs font-bold tracking-wider flex items-center justify-between px-4 hover:bg-navy hover:text-gold">
+                MESSAGES <MessageSquare size={14} />
+              </button>
             </div>
           </div>
 
           <div className="bg-white border border-border p-5">
-            <h3 className="font-bold text-navy mb-4">Pending Tasks</h3>
-            <div className="space-y-2 text-sm">
-              {[["Assignments to grade", 5], ["Attendance not marked", 3], ["Quiz to review", 2], ["Reports to submit", 1]].map((t, i) => (
-                <div key={i} className="flex justify-between border-b border-border py-2 last:border-0">
-                  <span className="text-navy">{t[0]}</span>
-                  <span className="font-bold text-accent">{t[1]}</span>
-                </div>
-              ))}
+             <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-navy">Class Progress</h3>
+              <BarChart3 size={16} className="text-muted-foreground" />
+            </div>
+            <div className="space-y-4">
+              <div className="text-xs text-center text-muted-foreground py-8 border-2 border-dashed border-border">
+                Live academic tracking coming soon in Phase 4.
+              </div>
             </div>
           </div>
         </div>

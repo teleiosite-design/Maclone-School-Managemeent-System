@@ -23,7 +23,7 @@ export default function AdminAnnouncements() {
   const [body, setBody] = useState("");
   const [audienceKey, setAudienceKey] = useState("All");
 
-  const { data: announcements = [], isLoading } = useQuery({
+  const { data: announcements = [], isLoading } = useQuery<Announcement[]>({
     queryKey: ["announcements"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -32,7 +32,7 @@ export default function AdminAnnouncements() {
         .order("created_at", { ascending: false })
         .limit(30);
       if (error) throw error;
-      return data ?? [];
+      return (data as any) ?? [];
     },
   });
 
@@ -49,7 +49,7 @@ export default function AdminAnnouncements() {
 
   const sendMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("announcements").insert({
+      const { error } = await (supabase.from("announcements") as any).insert({
         title,
         body,
         audience: AUDIENCE_MAP[audienceKey],

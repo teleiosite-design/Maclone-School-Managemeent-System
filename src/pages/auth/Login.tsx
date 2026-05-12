@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Lock, Mail, ShieldCheck, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -23,11 +24,17 @@ export default function Login() {
     }
 
     // Fetch profile to get role, then route to correct portal
-    const { data: profileData } = await (await import('@/lib/supabase')).supabase
+    const { data: profileData } = await (supabase
       .from('profiles')
       .select('role')
-      .single();
-    const role = profileData?.role ?? 'student';
+      .single() as any);
+    
+    if (!profileData) {
+      toast.error('Profile not found');
+      return;
+    }
+
+    const role = profileData.role;
     const roleRoutes: Record<string, string> = {
       admin: '/dashboard/admin',
       teacher: '/dashboard/teacher',

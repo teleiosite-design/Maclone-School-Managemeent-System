@@ -23,7 +23,7 @@ export default function AdminStudents() {
   const [viewing, setViewing] = useState<StudentRow | null>(null);
   const [form, setForm] = useState({ full_name: "", email: "", class: "Primary 1", admission_no: "" });
 
-  const { data: students = [], isLoading } = useQuery({
+  const { data: students = [], isLoading } = useQuery<StudentRow[]>({
     queryKey: ["students"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -38,7 +38,7 @@ export default function AdminStudents() {
   const addMutation = useMutation({
     mutationFn: async () => {
       const fakeId = crypto.randomUUID();
-      const { error: profileErr } = await supabase.from("profiles").insert({
+      const { error: profileErr } = await (supabase.from("profiles") as any).insert({
         id: fakeId,
         role: "student",
         full_name: form.full_name,
@@ -47,7 +47,7 @@ export default function AdminStudents() {
       if (profileErr) throw profileErr;
 
       const admNo = form.admission_no || `MC-${Date.now().toString().slice(-5)}`;
-      const { error: studentErr } = await supabase.from("students").insert({
+      const { error: studentErr } = await (supabase.from("students") as any).insert({
         profile_id: fakeId,
         class: form.class,
         admission_no: admNo,
@@ -65,8 +65,8 @@ export default function AdminStudents() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("students").update({ status }).eq("id", id);
+    mutationFn: async ({ id, status }: { id: string; status: 'active' | 'inactive' | 'graduated' }) => {
+      const { error } = await (supabase.from("students") as any).update({ status }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

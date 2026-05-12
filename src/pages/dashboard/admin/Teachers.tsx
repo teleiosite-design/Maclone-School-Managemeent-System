@@ -24,7 +24,7 @@ export default function AdminTeachers() {
 
   const today = new Date().toISOString().split("T")[0];
 
-  const { data: teachers = [], isLoading } = useQuery({
+  const { data: teachers = [], isLoading } = useQuery<TeacherRow[]>({
     queryKey: ["teachers"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -45,7 +45,7 @@ export default function AdminTeachers() {
       // 1. Create auth user via admin (requires service role — skip for now, use invite flow)
       // For now: insert profile + teacher record directly for demo
       const fakeId = crypto.randomUUID();
-      const { error: profileErr } = await supabase.from("profiles").insert({
+      const { error: profileErr } = await (supabase.from("profiles") as any).insert({
         id: fakeId,
         role: "teacher",
         full_name: form.full_name,
@@ -54,7 +54,7 @@ export default function AdminTeachers() {
       if (profileErr) throw profileErr;
 
       const empId = `T-${Date.now().toString().slice(-4)}`;
-      const { error: teacherErr } = await supabase.from("teachers").insert({
+      const { error: teacherErr } = await (supabase.from("teachers") as any).insert({
         profile_id: fakeId,
         employee_id: empId,
         department: form.department,
